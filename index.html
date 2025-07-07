@@ -342,7 +342,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- DOM Elements ---
+            // === DOM Elements and State ===
             const mainMenu = document.getElementById('main-menu');
             const gameScreen = document.getElementById('game-screen');
             const boardElement = document.getElementById('board');
@@ -352,7 +352,6 @@
             const gameOverOverlay = document.getElementById('game-over-overlay');
             const statsDisplay = document.getElementById('stats-display');
 
-            // --- State Variables ---
             let boardSize = 3;
             let gameMode = 'pvc';
             let currentPlayer = 'X';
@@ -362,9 +361,125 @@
             let humanPlayer = 'X';
             let aiPlayer = 'O';
             let stats = { wins: 0, losses: 0, ties: 0, gamesPlayedSinceAd: 0 };
-            const STATS_KEY = 'ticTacToeUserStats_v1'; // Key for VK Storage
 
-            // --- Event Listeners ---
+            // === VK Integration ===
+            const APP_ID = 53865837; // ❗❗❗ ВАЖНО: ВСТАВЬТЕ ID ВАШЕГО ПРИЛОЖЕНИЯ ЗДЕСЬ
+            const STATS_VK_KEY_PREFIX = 'ticTacToeStats';
+            const STATS_LOCAL_KEY = 'ticTacToeLocalSave';
+
+            let vkUser = null;
+            let vkUserId = null;
+            
+            async function initVK() {
+                if (APP_ID === 0) {
+                    console.warn("Необходимо указать ID приложения в переменной APP_ID");
+                    statsDisplay.textContent = "Ошибка: не указан ID приложения VK.";
+                    loadLocalStats();
+                    updateStatsDisplay();
+                    return;
+                }
+                
+                try {
+                    await vkBridge.send('VKWebAppInit', {});
+                    
+                    const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
+                    vkUser = userInfo;
+                    vkUserId = userInfo.id;
+                    
+                    await vkBridge.send('VKWebAppGetAuthToken', {
+                        app_id: APP_ID,
+                        scope: 'storage'
+                    });
+                    
+                    // Загружаем статистику пользователя
+                    await loadStats();
+                    console.log('VK Bridge инициализирован для пользователя ' + vkUserId);
+
+                    // Показываем баннерную рекламу
+                    vkBridge.send('VKWebAppShowBannerAd', {
+                        banner_location: 'bottom'
+                    }).catch(error => console.error("Ошибка показа баннера:", error));
+
+                } catch (error) {
+                    console.error('Ошибка инициализации VK Bridge:', error);
+                    // Fallback на локальное хранилище
+                    loadLocalStats();
+                    updateStatsDisplay();
+                }
+            }
+            
+            async function saveStats() {
+                const dataToSave = {
+                    stats: stats,
+                    lastUpdated: Date.now(),
+                    syncVersion: 1
+                };
+                const dataString = JSON.stringify(dataToSave);
+                
+                // Всегда сохраняем локально как резервную копию
+                localStorage.setItem(STATS_LOCAL_KEY, dataString);
+
+                // Пытаемся сохранить в облако VK
+                if (vkUserId) {
+                    try {
+                        await vkBridge.send('VKWebAppStorageSet', {
+                            key: `${STATS_VK_KEY_PREFIX}_${vkUserId}`,
+                            value: dataString,
+                        });
+                        console.log("Статистика сохранена в VK Storage.");
+                    } catch (err) {
+                        console.error('Ошибка сохранения в VK Storage:', err);
+                    }
+                }
+            }
+            
+            async function loadStats() {
+                if (!vkUserId) {
+                    loadLocalStats();
+                    updateStatsDisplay();
+                    return;
+                }
+
+                try {
+                    const response = await vkBridge.send('VKWebAppStorageGet', {
+                        keys: [`${STATS_VK_KEY_PREFIX}_${vkUserId}`]
+                    });
+                    
+                    if (response.keys[0]?.value) {
+                        const cloudData = JSON.parse(response.keys[0].value);
+                        if (cloudData.syncVersion === 1 && cloudData.stats) {
+                            stats = cloudData.stats;
+                            console.log("Статистика загружена из VK Storage.");
+                            updateStatsDisplay();
+                            return;
+                        }
+                    }
+                    // Если в облаке нет валидных данных, пробуем локальные
+                    loadLocalStats();
+                    updateStatsDisplay();
+                } catch (err) {
+                    console.error('Ошибка загрузки из VK Storage:', err);
+                    loadLocalStats();
+                    updateStatsDisplay();
+                }
+            }
+            
+            function loadLocalStats() {
+                const localData = localStorage.getItem(STATS_LOCAL_KEY);
+                if (localData) {
+                    try {
+                        const parsedData = JSON.parse(localData);
+                        if (parsedData.stats) {
+                           stats = parsedData.stats;
+                           console.log("Статистика загружена из localStorage.");
+                        }
+                    } catch {
+                        console.error("Ошибка парсинга локальных данных.");
+                    }
+                }
+            }
+
+            // === Event Listeners ===
             document.getElementById('board-size-selector').addEventListener('click', (e) => {
                 if (e.target.classList.contains('btn')) {
                     handleSelector(e.target, '#board-size-selector');
@@ -400,8 +515,8 @@
                 showMainMenu();
             });
 
-            // --- Core Functions ---
 
+            // === Core Game Functions ===
             function handleSelector(target, parentSelector) {
                 document.querySelectorAll(`${parentSelector} .btn`).forEach(btn => btn.classList.remove('active'));
                 target.classList.add('active');
@@ -497,22 +612,20 @@
                     else stats.losses++;
                 }
                 
-                stats.gamesPlayedSinceAd++;
-                await saveStats();
+                stats.gamesPlayedSinceAd = (stats.gamesPlayedSinceAd || 0) + 1;
+                await saveStats(); // Сохраняем статистику после каждой игры
                 updateStatsDisplay();
                 
-                // Show interstitial ad every 3 games
+                // Показ межстраничной рекламы после каждой 3-й игры
                 if (stats.gamesPlayedSinceAd >= 3) {
                     try {
                         const adResult = await vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' });
                         if(adResult.result) {
                              stats.gamesPlayedSinceAd = 0;
-                             await saveStats(); // Save reset counter
+                             await saveStats(); // Сбрасываем счетчик и сохраняем снова
                         }
                     } catch (error) {
-                        console.error('Interstitial Ad Error:', error);
-                        // Если реклама не показалась (например, из-за ошибки или отсутствия),
-                        // не сбрасываем счётчик, чтобы попробовать в следующий раз.
+                        console.error('Ошибка показа межстраничной рекламы:', error);
                     }
                 }
             }
@@ -535,8 +648,15 @@
                 mainMenu.classList.remove('hidden');
                 updateStatsDisplay();
             }
+            
+            function updateStatsDisplay() {
+                if (stats) {
+                    statsDisplay.textContent = `Статистика (VS ИИ): Побед: ${stats.wins} | Поражений: ${stats.losses} | Ничьи: ${stats.ties}`;
+                }
+            }
 
-            // --- AI Logic (Minimax) ---
+
+            // === AI Logic (Minimax) ===
             function aiMove() {
                 if (isGameOver) return;
                 statusText.textContent = `Думает ${aiPlayer}...`;
@@ -626,74 +746,8 @@
                 return 0;
             }
 
-            // --- VK Bridge Integration ---
-            
-            async function saveStats() {
-                try {
-                    await vkBridge.send('VKWebAppStorageSet', {
-                        key: STATS_KEY,
-                        value: JSON.stringify(stats)
-                    });
-                } catch (error) {
-                    console.error('VK Storage Save Error:', error);
-                }
-            }
-
-            async function loadStats() {
-                try {
-                    const data = await vkBridge.send('VKWebAppStorageGet', { keys: [STATS_KEY] });
-                    if (data.keys[0].value) {
-                        const loadedStats = JSON.parse(data.keys[0].value);
-                        // Проверка на наличие всех полей, чтобы избежать ошибок после обновления
-                        if(loadedStats.wins !== undefined && loadedStats.gamesPlayedSinceAd !== undefined) {
-                            stats = loadedStats;
-                        }
-                    }
-                } catch (error) {
-                    console.error('VK Storage Load Error:', error);
-                }
-                updateStatsDisplay();
-            }
-            
-            function updateStatsDisplay() {
-                statsDisplay.textContent = `Статистика (VS ИИ): Побед: ${stats.wins} | Поражений: ${stats.losses} | Ничьи: ${stats.ties}`;
-            }
-
-            const APP_ID = 53865837; // Ваш ID приложения
-        let vkUser = null;
-        let vkUserId = null;
-        let vkAccessToken = null;
-        
-        // Инициализация VK Bridge
-        async function initVK() {
-            try {
-                await vkBridge.send('VKWebAppInit', {});
-                
-                // Получаем информацию о пользователе
-                const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
-                vkUser = userInfo;
-                vkUserId = userInfo.id;
-                
-                // Получаем токен доступа
-                const tokenData = await vkBridge.send('VKWebAppGetAuthToken', {
-                    app_id: APP_ID,
-                    scope: 'storage'
-                });
-                vkAccessToken = tokenData.access_token;
-                
-                // Загружаем статистику
-                await loadStats();
-                
-                console.log('VK Bridge инициализирован');
-            } catch (error) {
-                console.error('Ошибка инициализации VK Bridge:', error);
-                // Загружаем локальные данные, если не удалось подключиться к VK
-                loadLocalStats();
-            }
-        }
-
-            // --- Initial Load ---
-            initApp();
+            // === Initial Load ===
+            initVK();
         });
     </script>
 
