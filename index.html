@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no, user-scalable=no, viewport-fit=cover">
     <title>Tic-Tac-Toe for VK</title>
-    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/vk-bridge.min.js"></script>
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
@@ -341,7 +341,7 @@
 
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             // === DOM Elements and State ===
             const mainMenu = document.getElementById('main-menu');
             const gameScreen = document.getElementById('game-screen');
@@ -363,50 +363,42 @@
             let stats = { wins: 0, losses: 0, ties: 0, gamesPlayedSinceAd: 0 };
 
             // === VK Integration ===
-            const APP_ID = 53865837; // ❗❗❗ ВАЖНО: ВСТАВЬТЕ ID ВАШЕГО ПРИЛОЖЕНИЯ ЗДЕСЬ
+            const APP_ID = 53865837;
             const STATS_VK_KEY_PREFIX = 'ticTacToeStats';
             const STATS_LOCAL_KEY = 'ticTacToeLocalSave';
 
             let vkUser = null;
             let vkUserId = null;
+            let vkAccessToken = null;
             
-            async function initVK() {
-                if (APP_ID === 0) {
-                    console.warn("Необходимо указать ID приложения в переменной APP_ID");
-                    statsDisplay.textContent = "Ошибка: не указан ID приложения VK.";
-                    loadLocalStats();
-                    updateStatsDisplay();
-                    return;
-                }
+            // Инициализация VK Bridge
+        async function initVK() {
+            try {
+                await vkBridge.send('VKWebAppInit', {});
                 
-                try {
-                    await vkBridge.send('VKWebAppInit', {});
-                    
-                    const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
-                    vkUser = userInfo;
-                    vkUserId = userInfo.id;
-                    
-                    await vkBridge.send('VKWebAppGetAuthToken', {
-                        app_id: APP_ID,
-                        scope: 'storage'
-                    });
-                    
-                    // Загружаем статистику пользователя
-                    await loadStats();
-                    console.log('VK Bridge инициализирован для пользователя ' + vkUserId);
-
-                    // Показываем баннерную рекламу
-                    vkBridge.send('VKWebAppShowBannerAd', {
-                        banner_location: 'bottom'
-                    }).catch(error => console.error("Ошибка показа баннера:", error));
-
-                } catch (error) {
-                    console.error('Ошибка инициализации VK Bridge:', error);
-                    // Fallback на локальное хранилище
-                    loadLocalStats();
-                    updateStatsDisplay();
-                }
+                // Получаем информацию о пользователе
+                const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
+                vkUser = userInfo;
+                vkUserId = userInfo.id;
+                
+                // Получаем токен доступа
+                const tokenData = await vkBridge.send('VKWebAppGetAuthToken', {
+                    app_id: APP_ID,
+                    scope: 'storage'
+                });
+                vkAccessToken = tokenData.access_token;
+                
+                // Загружаем статистику
+                await loadStats();
+                
+                console.log('VK Bridge инициализирован');
+            } catch (error) {
+                console.error('Ошибка инициализации VK Bridge:', error);
+                // Загружаем локальные данные, если не удалось подключиться к VK
+                loadLocalStats();
             }
+        }
+        await initVK();
             
             async function saveStats() {
                 const dataToSave = {
@@ -746,8 +738,6 @@
                 return 0;
             }
 
-            // === Initial Load ===
-            initVK();
         });
     </script>
 
