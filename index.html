@@ -743,21 +743,40 @@ function checkAndShowAd() {
 
             function findBestMove() {
                 let bestVal = -Infinity;
-                let bestMove = null;
+                let bestMoves = []; // Собираем все лучшие ходы, а не только один
+
                 for (let i = 0; i < boardSize; i++) {
                     for (let j = 0; j < boardSize; j++) {
+                        // Если ячейка пуста
                         if (boardState[i][j] === null) {
+                            // Делаем ход
                             boardState[i][j] = aiPlayer;
+                            // Оцениваем его с помощью минимакса
                             let moveVal = minimax(0, false, -Infinity, Infinity);
+                            // Отменяем ход
                             boardState[i][j] = null;
+
+                            // Сравниваем оценку с лучшей найденной
                             if (moveVal > bestVal) {
-                                bestMove = { row: i, col: j };
+                                // Если нашли ход лучше, чем все предыдущие
                                 bestVal = moveVal;
+                                bestMoves = [{ row: i, col: j }]; // Начинаем новый список лучших ходов
+                            } else if (moveVal === bestVal) {
+                                // Если ход так же хорош, как и лучший уже найденный
+                                bestMoves.push({ row: i, col: j }); // Добавляем его в список
                             }
                         }
                     }
                 }
-                return bestMove;
+                
+                // Если есть хотя бы один хороший ход
+                if (bestMoves.length > 0) {
+                    // Выбираем случайный ход из списка лучших
+                    const randomIndex = Math.floor(Math.random() * bestMoves.length);
+                    return bestMoves[randomIndex];
+                }
+
+                return null; // На всякий случай, если ходов не осталось
             }
             
             function minimax(depth, isMaximizing, alpha, beta) {
