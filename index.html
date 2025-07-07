@@ -659,25 +659,38 @@
                 statsDisplay.textContent = `Статистика (VS ИИ): Побед: ${stats.wins} | Поражений: ${stats.losses} | Ничьи: ${stats.ties}`;
             }
 
-            async function initApp() {
-                try {
-                    // 1. Инициализируем VK Bridge
-                    await vkBridge.send('VKWebAppInit');
-                    
-                    // 2. Загружаем статистику пользователя
-                    await loadStats();
-
-                    // 3. Показываем баннерную рекламу
-                    await vkBridge.send('VKWebAppShowBannerAd', {
-                        banner_location: 'bottom'
-                    });
-
-                } catch (error) {
-                    console.error('VK App Init Error:', error);
-                    // Если что-то пошло не так, просто отображаем статистику по умолчанию
-                    updateStatsDisplay();
-                }
+            const APP_ID = 53865837; // Ваш ID приложения
+        let vkUser = null;
+        let vkUserId = null;
+        let vkAccessToken = null;
+        
+        // Инициализация VK Bridge
+        async function initVK() {
+            try {
+                await vkBridge.send('VKWebAppInit', {});
+                
+                // Получаем информацию о пользователе
+                const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
+                vkUser = userInfo;
+                vkUserId = userInfo.id;
+                
+                // Получаем токен доступа
+                const tokenData = await vkBridge.send('VKWebAppGetAuthToken', {
+                    app_id: APP_ID,
+                    scope: 'storage'
+                });
+                vkAccessToken = tokenData.access_token;
+                
+                // Загружаем статистику
+                await loadStats();
+                
+                console.log('VK Bridge инициализирован');
+            } catch (error) {
+                console.error('Ошибка инициализации VK Bridge:', error);
+                // Загружаем локальные данные, если не удалось подключиться к VK
+                loadLocalStats();
             }
+        }
 
             // --- Initial Load ---
             initApp();
