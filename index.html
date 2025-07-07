@@ -470,6 +470,76 @@
                     }
                 }
             }
+ 
+async function validateSignature(params) {
+    const sign = params.get('sign');
+    const checkParams = new URLSearchParams();
+    
+    params.forEach((value, key) => {
+        if (key !== 'sign') checkParams.set(key, value);
+    });
+
+    const isValid = await vkBridge.send('VKWebAppVerifyMessage', {
+        message: checkParams.toString(),
+        signature: sign
+    });
+
+    if (!isValid) throw new Error('Invalid signature');
+}
+
+// Показ баннера рекламы
+function showBannerAd() {
+    vkBridge.send("VKWebAppShowBannerAd")
+        .then(response => {
+            console.log('Баннерная реклама показана:', response);
+        })
+        .catch(error => {
+            console.error('Ошибка при показе баннерной рекламы:', error);
+        });
+}
+
+// Скрытие баннера рекламы
+function hideBannerAd() {
+    vkBridge.send("VKWebAppHideBannerAd")
+        .then(response => {
+            console.log('Баннерная реклама скрыта:', response);
+        })
+        .catch(error => {
+            console.error('Ошибка при скрытии баннерной рекламы:', error);
+        });
+}
+
+// Подписка на события
+vkBridge.subscribe((e) => {
+    if (e.detail.type === 'VKWebAppBannerAdUpdated') {
+        console.log('Баннерная реклама обновлена:', e);
+    } else if (e.detail.type === 'VKWebAppBannerAdClosedByUser') {
+        console.log('Пользователь закрыл рекламу:', e);
+    }
+});
+
+function checkAndShowAd() {
+    vkBridge.send('VKWebAppCheckNativeAds')
+    .then(data => {
+        if (data.available) {
+            // Если рекламные материалы доступны, показываем их
+            vkBridge.send('VKWebAppShowNativeAds')
+            .then(() => {
+                // Успешное отображение рекламы
+            })
+            .catch(error => {
+                console.error('Ошибка при показе рекламы:', error);
+            });
+        } else {
+            console.log('Рекламные материалы не доступны.');
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка при проверке наличия рекламы:', error);
+    });
+}
+
+
 
             // === Event Listeners ===
             document.getElementById('board-size-selector').addEventListener('click', (e) => {
@@ -540,6 +610,8 @@
                 if (gameMode === 'pvc' && currentPlayer !== humanPlayer) {
                     setTimeout(aiMove, 500);
                 }
+
+                showBannerAd();
             }
 
             function handleCellClick(e) {
@@ -639,6 +711,7 @@
                 gameScreen.classList.add('hidden');
                 mainMenu.classList.remove('hidden');
                 updateStatsDisplay();
+                showBannerAd();
             }
             
             function updateStatsDisplay() {
