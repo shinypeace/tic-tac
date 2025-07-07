@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no, user-scalable=no, viewport-fit=cover">
+    <title>Tic-Tac-Toe for VK</title>
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/vk-bridge.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --primary-color: #2c2c2c;
+            --secondary-color: #3f3f3f;
+            --accent-color: #00d9ff;
+            --text-color: #f0f0f0;
+            --x-color: #00d9ff;
+            --o-color: #ff007f;
+            --border-radius: 12px;
+            --transition-speed: 0.3s;
+            --board-size: 3;
+            --cell-gap: 10px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- Main Menu --- */
+        .main-menu {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            text-align: center;
+            width: 100%;
+            transition: opacity var(--transition-speed), transform var(--transition-speed);
+        }
+
+        .main-menu.hidden, .game-screen.hidden {
+            display: none;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, var(--x-color), var(--o-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        .menu-section {
+            background-color: var(--primary-color);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .menu-section h3 {
+            font-size: 1.2rem;
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 10px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .btn {
+            flex-grow: 1;
+            padding: 15px 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color var(--transition-speed), transform var(--transition-speed);
+            border: 2px solid transparent;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            background-color: #4a4a4a;
+        }
+
+        .btn.active {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+            border-color: var(--accent-color);
+        }
+
+        .start-btn {
+            padding: 18px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--x-color), var(--o-color));
+            color: var(--text-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+            margin-top: 10px;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.5), 0 0 20px rgba(255, 0, 127, 0.5);
+        }
+
+        #stats-display {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-top: 10px;
+        }
+        
+        /* --- Game Screen --- */
+        .game-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .game-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #status-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        #pause-btn {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: color var(--transition-speed);
+        }
+        #pause-btn:hover {
+            color: var(--accent-color);
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(var(--board-size), 1fr);
+            gap: var(--cell-gap);
+            width: 100%;
+            background-color: var(--primary-color);
+            padding: var(--cell-gap);
+            border-radius: var(--border-radius);
+        }
+
+        .cell {
+            aspect-ratio: 1 / 1;
+            background-color: var(--secondary-color);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color var(--transition-speed);
+        }
+        
+        .cell:not(.x):not(.o):hover {
+            background-color: #4a4a4a;
+        }
+
+        .cell.x, .cell.o {
+            cursor: not-allowed;
+            font-size: min(10vw, calc(300px / var(--board-size) * 0.7));
+            font-weight: 700;
+            line-height: 1;
+        }
+        
+        .cell.x { color: var(--x-color); }
+        .cell.o { color: var(--o-color); }
+        
+        /* --- Overlay Styles --- */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(26, 26, 26, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition-speed);
+            z-index: 1000;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .overlay-content {
+            background-color: var(--primary-color);
+            padding: 40px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transform: scale(0.9);
+            transition: transform var(--transition-speed);
+        }
+        
+        .overlay.active .overlay-content {
+            transform: scale(1);
+        }
+
+        .overlay-content h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .overlay-content .btn-group {
+            flex-direction: column;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 500px) {
+            :root {
+                --cell-gap: 5px;
+            }
+            .title { font-size: 2rem; }
+            #status-text { font-size: 1.2rem; }
+            .btn { padding: 12px 8px; font-size: 0.9rem;}
+            .start-btn { padding: 15px; font-size: 1.1rem; }
+            .overlay-content { padding: 30px; width: calc(100% - 40px); }
+            .overlay-content h2 { font-size: 1.8rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="main-menu" class="main-menu">
+            <h1 class="title">TIC-TAC-TOE</h1>
+            <div class="menu-section">
+                <h3>Размер Поля</h3>
+                <div class="btn-group" id="board-size-selector">
+                    <button class="btn active" data-size="3">3x3</button>
+                    <button class="btn" data-size="4">4x4</button>
+                    <button class="btn" data-size="5">5x5</button>
+                </div>
+            </div>
+            <div class="menu-section">
+                <h3>Режим Игры</h3>
+                <div class="btn-group" id="game-mode-selector">
+                    <button class="btn active" data-mode="pvc">VS Компьютер</button>
+                    <button class="btn" data-mode="pvp">VS Игрок</button>
+                </div>
+            </div>
+            <button id="start-game-btn" class="start-btn">Начать Игру</button>
+            <div id="stats-display">Загрузка статистики...</div>
+        </div>
+
+        <div id="game-screen" class="game-screen hidden">
+            <div class="game-header">
+                <div id="status-text">Ход X</div>
+                <button id="pause-btn">❚❚</button>
+            </div>
+            <div id="board"></div>
+        </div>
+    </div>
+
+    <div id="pause-overlay" class="overlay">
+        <div class="overlay-content">
+            <h2>Пауза</h2>
+            <div class="btn-group">
+                <button id="resume-btn" class="btn">Продолжить</button>
+                <button id="restart-pause-btn" class="btn">Начать заново</button>
+                <button id="menu-pause-btn" class="btn">Главное меню</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-over-overlay" class="overlay">
+        <div class="overlay-content">
+            <h2 id="game-over-message"></h2>
+            <div class="btn-group">
+                <button id="restart-game-over-btn" class="btn">Играть снова</button>
+                <button id="menu-game-over-btn" class="btn">Главное меню</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const mainMenu = document.getElementById('main-menu');
+            const gameScreen = document.getElementById('game-screen');
+            const boardElement = document.getElementById('board');
+            const statusText = document.getElementById('status-text');
+            const pauseBtn = document.getElementById('pause-btn');
+            const pauseOverlay = document.getElementById('pause-overlay');
+            const gameOverOverlay = document.getElementById('game-over-overlay');
+            const statsDisplay = document.getElementById('stats-display');
+
+            // --- State Variables ---
+            let boardSize = 3;
+            let gameMode = 'pvc';
+            let currentPlayer = 'X';
+            let boardState = [];
+            let isGameOver = false;
+            let isPaused = false;
+            let humanPlayer = 'X';
+            let aiPlayer = 'O';
+            let stats = { wins: 0, losses: 0, ties: 0, gamesPlayedSinceAd: 0 };
+            const STATS_KEY = 'ticTacToeUserStats_v1'; // Key for VK Storage
+
+            // --- Event Listeners ---
+            document.getElementById('board-size-selector').addEventListener('click', (e) => {
+                if (e.target.classList.contains('btn')) {
+                    handleSelector(e.target, '#board-size-selector');
+                    boardSize = parseInt(e.target.dataset.size);
+                }
+            });
+
+            document.getElementById('game-mode-selector').addEventListener('click', (e) => {
+                if (e.target.classList.contains('btn')) {
+                    handleSelector(e.target, '#game-mode-selector');
+                    gameMode = e.target.dataset.mode;
+                }
+            });
+
+            document.getElementById('start-game-btn').addEventListener('click', startGame);
+            pauseBtn.addEventListener('click', togglePause);
+            
+            document.getElementById('resume-btn').addEventListener('click', togglePause);
+            document.getElementById('restart-pause-btn').addEventListener('click', () => {
+                togglePause();
+                startGame();
+            });
+            document.getElementById('menu-pause-btn').addEventListener('click', () => {
+                togglePause();
+                showMainMenu();
+            });
+            document.getElementById('restart-game-over-btn').addEventListener('click', () => {
+                hideOverlay(gameOverOverlay);
+                startGame();
+            });
+            document.getElementById('menu-game-over-btn').addEventListener('click', () => {
+                hideOverlay(gameOverOverlay);
+                showMainMenu();
+            });
+
+            // --- Core Functions ---
+
+            function handleSelector(target, parentSelector) {
+                document.querySelectorAll(`${parentSelector} .btn`).forEach(btn => btn.classList.remove('active'));
+                target.classList.add('active');
+            }
+
+            function startGame() {
+                isGameOver = false;
+                currentPlayer = 'X';
+                
+                boardState = Array(boardSize).fill(null).map(() => Array(boardSize).fill(null));
+                boardElement.innerHTML = '';
+                boardElement.style.setProperty('--board-size', boardSize);
+                
+                for (let i = 0; i < boardSize; i++) {
+                    for (let j = 0; j < boardSize; j++) {
+                        const cell = document.createElement('div');
+                        cell.classList.add('cell');
+                        cell.dataset.row = i;
+                        cell.dataset.col = j;
+                        cell.addEventListener('click', handleCellClick);
+                        boardElement.appendChild(cell);
+                    }
+                }
+
+                statusText.textContent = `Ход ${currentPlayer}`;
+                mainMenu.classList.add('hidden');
+                gameScreen.classList.remove('hidden');
+                
+                if (gameMode === 'pvc' && currentPlayer !== humanPlayer) {
+                    setTimeout(aiMove, 500);
+                }
+            }
+
+            function handleCellClick(e) {
+                if (isGameOver || isPaused) return;
+                const cell = e.target;
+                const row = cell.dataset.row;
+                const col = cell.dataset.col;
+
+                if (boardState[row][col] || (gameMode === 'pvc' && currentPlayer === aiPlayer)) {
+                    return;
+                }
+
+                makeMove(row, col, currentPlayer);
+
+                if (checkWin(currentPlayer)) {
+                    endGame(false);
+                } else if (isBoardFull()) {
+                    endGame(true);
+                } else {
+                    switchPlayer();
+                    if (gameMode === 'pvc' && currentPlayer === aiPlayer) {
+                        setTimeout(aiMove, 500);
+                    }
+                }
+            }
+
+            function makeMove(row, col, player) {
+                boardState[row][col] = player;
+                const cell = document.querySelector(`[data-row='${row}'][data-col='${col}']`);
+                cell.textContent = player;
+                cell.classList.add(player.toLowerCase());
+            }
+
+            function switchPlayer() {
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                statusText.textContent = `Ход ${currentPlayer}`;
+            }
+
+            function checkWin(player) {
+                for (let i = 0; i < boardSize; i++) {
+                    if (boardState[i].every(cell => cell === player)) return true;
+                    if (boardState.map(row => row[i]).every(cell => cell === player)) return true;
+                }
+                if (boardState.map((row, idx) => row[idx]).every(cell => cell === player)) return true;
+                if (boardState.map((row, idx) => row[boardSize - 1 - idx]).every(cell => cell === player)) return true;
+                return false;
+            }
+
+            function isBoardFull() {
+                return boardState.flat().every(cell => cell !== null);
+            }
+
+            async function endGame(isDraw) {
+                isGameOver = true;
+                const message = isDraw ? "Ничья!" : `Победил ${currentPlayer}!`;
+                document.getElementById('game-over-message').textContent = message;
+                showOverlay(gameOverOverlay);
+
+                if (gameMode === 'pvc') {
+                    if (isDraw) stats.ties++;
+                    else if (currentPlayer === humanPlayer) stats.wins++;
+                    else stats.losses++;
+                }
+                
+                stats.gamesPlayedSinceAd++;
+                await saveStats();
+                updateStatsDisplay();
+                
+                // Show interstitial ad every 3 games
+                if (stats.gamesPlayedSinceAd >= 3) {
+                    try {
+                        const adResult = await vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' });
+                        if(adResult.result) {
+                             stats.gamesPlayedSinceAd = 0;
+                             await saveStats(); // Save reset counter
+                        }
+                    } catch (error) {
+                        console.error('Interstitial Ad Error:', error);
+                        // Если реклама не показалась (например, из-за ошибки или отсутствия),
+                        // не сбрасываем счётчик, чтобы попробовать в следующий раз.
+                    }
+                }
+            }
+            
+            function togglePause() {
+                isPaused = !isPaused;
+                isPaused ? showOverlay(pauseOverlay) : hideOverlay(pauseOverlay);
+            }
+
+            function showOverlay(overlay) {
+                overlay.classList.add('active');
+            }
+
+            function hideOverlay(overlay) {
+                overlay.classList.remove('active');
+            }
+            
+            function showMainMenu() {
+                gameScreen.classList.add('hidden');
+                mainMenu.classList.remove('hidden');
+                updateStatsDisplay();
+            }
+
+            // --- AI Logic (Minimax) ---
+            function aiMove() {
+                if (isGameOver) return;
+                statusText.textContent = `Думает ${aiPlayer}...`;
+                
+                requestAnimationFrame(() => {
+                    const bestMove = findBestMove();
+                    if (bestMove) {
+                        makeMove(bestMove.row, bestMove.col, aiPlayer);
+                        if (checkWin(aiPlayer)) {
+                            endGame(false);
+                        } else if (isBoardFull()) {
+                            endGame(true);
+                        } else {
+                            switchPlayer();
+                        }
+                    }
+                });
+            }
+
+            function findBestMove() {
+                let bestVal = -Infinity;
+                let bestMove = null;
+                for (let i = 0; i < boardSize; i++) {
+                    for (let j = 0; j < boardSize; j++) {
+                        if (boardState[i][j] === null) {
+                            boardState[i][j] = aiPlayer;
+                            let moveVal = minimax(0, false, -Infinity, Infinity);
+                            boardState[i][j] = null;
+                            if (moveVal > bestVal) {
+                                bestMove = { row: i, col: j };
+                                bestVal = moveVal;
+                            }
+                        }
+                    }
+                }
+                return bestMove;
+            }
+            
+            function minimax(depth, isMaximizing, alpha, beta) {
+                let score = evaluate();
+                if (score === 10) return score - depth;
+                if (score === -10) return score + depth;
+                if (isBoardFull() || depth > getSearchDepth()) return 0;
+
+                if (isMaximizing) {
+                    let best = -Infinity;
+                    for (let i = 0; i < boardSize; i++) {
+                        for (let j = 0; j < boardSize; j++) {
+                            if (boardState[i][j] === null) {
+                                boardState[i][j] = aiPlayer;
+                                best = Math.max(best, minimax(depth + 1, !isMaximizing, alpha, beta));
+                                boardState[i][j] = null;
+                                alpha = Math.max(alpha, best);
+                                if (beta <= alpha) break;
+                            }
+                        }
+                         if (beta <= alpha) break;
+                    }
+                    return best;
+                } else {
+                    let best = Infinity;
+                    for (let i = 0; i < boardSize; i++) {
+                        for (let j = 0; j < boardSize; j++) {
+                            if (boardState[i][j] === null) {
+                                boardState[i][j] = humanPlayer;
+                                best = Math.min(best, minimax(depth + 1, !isMaximizing, alpha, beta));
+                                boardState[i][j] = null;
+                                beta = Math.min(beta, best);
+                                if (beta <= alpha) break;
+                            }
+                        }
+                         if (beta <= alpha) break;
+                    }
+                    return best;
+                }
+            }
+            
+            function getSearchDepth() {
+                if (boardSize === 3) return 9;
+                if (boardSize === 4) return 4;
+                return 3;
+            }
+
+            function evaluate() {
+                if (checkWin(aiPlayer)) return 10;
+                if (checkWin(humanPlayer)) return -10;
+                return 0;
+            }
+
+            // --- VK Bridge Integration ---
+            
+            async function saveStats() {
+                try {
+                    await vkBridge.send('VKWebAppStorageSet', {
+                        key: STATS_KEY,
+                        value: JSON.stringify(stats)
+                    });
+                } catch (error) {
+                    console.error('VK Storage Save Error:', error);
+                }
+            }
+
+            async function loadStats() {
+                try {
+                    const data = await vkBridge.send('VKWebAppStorageGet', { keys: [STATS_KEY] });
+                    if (data.keys[0].value) {
+                        const loadedStats = JSON.parse(data.keys[0].value);
+                        // Проверка на наличие всех полей, чтобы избежать ошибок после обновления
+                        if(loadedStats.wins !== undefined && loadedStats.gamesPlayedSinceAd !== undefined) {
+                            stats = loadedStats;
+                        }
+                    }
+                } catch (error) {
+                    console.error('VK Storage Load Error:', error);
+                }
+                updateStatsDisplay();
+            }
+            
+            function updateStatsDisplay() {
+                statsDisplay.textContent = `Статистика (VS ИИ): Побед: ${stats.wins} | Поражений: ${stats.losses} | Ничьи: ${stats.ties}`;
+            }
+
+            async function initApp() {
+                try {
+                    // 1. Инициализируем VK Bridge
+                    await vkBridge.send('VKWebAppInit');
+                    
+                    // 2. Загружаем статистику пользователя
+                    await loadStats();
+
+                    // 3. Показываем баннерную рекламу
+                    await vkBridge.send('VKWebAppShowBannerAd', {
+                        banner_location: 'bottom'
+                    });
+
+                } catch (error) {
+                    console.error('VK App Init Error:', error);
+                    // Если что-то пошло не так, просто отображаем статистику по умолчанию
+                    updateStatsDisplay();
+                }
+            }
+
+            // --- Initial Load ---
+            initApp();
+        });
+    </script>
+
+</body>
+</html>
