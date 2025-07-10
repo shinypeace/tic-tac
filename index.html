@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no, user-scalable=no, viewport-fit=cover">
-    <title>Tic-Tac-Toe Advanced</title>
+    <title>Tic-Tac-Toe Ultimate</title>
+    <!-- VK BRIDGE SCRIPT -->
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/vk-bridge.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -41,7 +42,7 @@
             align-items: center;
             justify-content: center;
         }
-        .main-menu, .game-screen { width: 100%; }
+        .main-menu, .game-screen { width: 100%; position: relative; }
         .main-menu {
             display: flex;
             flex-direction: column;
@@ -102,11 +103,35 @@
         #status-text { font-size: 1.5rem; font-weight: 600; }
         #pause-btn { background: none; border: none; color: var(--text-color); font-size: 1.8rem; cursor: pointer; transition: color var(--transition-speed); }
         #pause-btn:hover { color: var(--accent-color); }
+        
+        .board-container {
+            position: relative;
+            width: 100%;
+        }
+
         #board {
             display: grid; grid-template-columns: repeat(var(--board-size), 1fr);
             gap: var(--cell-gap); width: 100%; background-color: var(--primary-color);
             padding: var(--cell-gap); border-radius: var(--border-radius);
         }
+        
+        #win-line-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            overflow: visible;
+        }
+
+        #win-line {
+            stroke-width: 8px;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s ease-in-out;
+        }
+
         .cell {
             aspect-ratio: 1 / 1; background-color: var(--secondary-color);
             border-radius: 8px; display: flex; justify-content: center;
@@ -149,6 +174,7 @@
 <body>
 
     <div class="container">
+        <!-- Main Menu -->
         <div id="main-menu" class="main-menu">
             <h1 class="title">TIC-TAC-TOE</h1>
             <div class="menu-section">
@@ -169,14 +195,21 @@
             <button id="start-game-btn" class="start-btn">Начать Игру</button>
             <div id="stats-display">Загрузка статистики...</div>
         </div>
+        <!-- Game Screen -->
         <div id="game-screen" class="game-screen hidden">
             <div class="game-header">
                 <div id="status-text">Ход X</div>
                 <button id="pause-btn">❚❚</button>
             </div>
-            <div id="board"></div>
+            <div class="board-container">
+                <div id="board"></div>
+                <svg id="win-line-svg">
+                    <line id="win-line" x1="0" y1="0" x2="0" y2="0" />
+                </svg>
+            </div>
         </div>
     </div>
+    <!-- Overlays -->
     <div id="pause-overlay" class="overlay">
         <div class="overlay-content">
             <h2>Пауза</h2>
@@ -198,49 +231,77 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', async() => {
+        document.addEventListener('DOMContentLoaded', async () => {
             // === DOM Elements and State ===
             const mainMenu = document.getElementById('main-menu'), gameScreen = document.getElementById('game-screen'),
                   boardElement = document.getElementById('board'), statusText = document.getElementById('status-text'),
                   pauseBtn = document.getElementById('pause-btn'), pauseOverlay = document.getElementById('pause-overlay'),
-                  gameOverOverlay = document.getElementById('game-over-overlay'), statsDisplay = document.getElementById('stats-display');
+                  gameOverOverlay = document.getElementById('game-over-overlay'), statsDisplay = document.getElementById('stats-display'),
+                  winLine = document.getElementById('win-line');
 
             let boardSize = 3, gameMode = 'pvc', currentPlayer = 'X', boardState = [],
                 isGameOver = false, isPaused = false, humanPlayer = 'X', aiPlayer = 'O',
-                stats = { wins: 0, losses: 0, ties: 0, gamesPlayedSinceAd: 0 };
-            const STATS_KEY = 'ticTacToeUserStats_v2'; 
+                stats = { wins: 0, losses: 0, ties: 0, gamesPlayedSinceAd: 0, whoStartsNext: 'X' };
 
-            // === VK Integration ===
-            async function initApp() {
+            // === VK Integration (from user file) ===
+            const APP_ID = 0; // ❗❗❗ ВАЖНО: ВСТАВЬТЕ ID ВАШЕГО ПРИЛОЖЕНИЯ ЗДЕСЬ
+            const STATS_VK_KEY_PREFIX = 'ticTacToeStats';
+            const STATS_LOCAL_KEY = 'ticTacToeLocalSave_v3';
+            let vkUser = null, vkUserId = null;
+
+            async function initVK() {
+                if (APP_ID === 0) console.warn("Необходимо указать ID приложения в переменной APP_ID");
                 try {
-                    await vkBridge.send('VKWebAppInit');
+                    await vkBridge.send('VKWebAppInit', {});
+                    const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
+                    vkUser = userInfo;
+                    vkUserId = userInfo.id;
+                    await vkBridge.send('VKWebAppGetAuthToken', { app_id: APP_ID, scope: 'storage' });
                     await loadStats();
-                    vkBridge.send('VKWebAppShowBannerAd', {
-                        banner_location: 'bottom'
-                    }).catch(e => console.error("Banner ad error", e));
+                    console.log('VK Bridge инициализирован');
                 } catch (error) {
-                    console.error('VK App Init Error:', error);
-                    updateStatsDisplay();
+                    console.error('Ошибка инициализации VK Bridge, используется localStorage:', error);
+                    loadLocalStats();
+                }
+                updateStatsDisplay();
+                vkBridge.send('VKWebAppShowBannerAd', { banner_location: 'bottom' }).catch(e => {});
+            }
+
+            async function saveStats() {
+                const dataToSave = { stats: stats, lastUpdated: Date.now(), syncVersion: 3 };
+                const dataString = JSON.stringify(dataToSave);
+                localStorage.setItem(STATS_LOCAL_KEY, dataString);
+                if (vkUserId) {
+                    try {
+                        await vkBridge.send('VKWebAppStorageSet', {
+                            key: `${STATS_VK_KEY_PREFIX}_${vkUserId}`, value: dataString,
+                        });
+                    } catch (err) { console.error('Ошибка сохранения в VK Storage:', err); }
                 }
             }
-            async function saveStats() {
-                try {
-                    await vkBridge.send('VKWebAppStorageSet', {
-                        key: STATS_KEY, value: JSON.stringify(stats)
-                    });
-                } catch (error) { console.error('VK Storage Save Error:', error); }
-            }
+
             async function loadStats() {
+                if (!vkUserId) { loadLocalStats(); return; }
                 try {
-                    const data = await vkBridge.send('VKWebAppStorageGet', { keys: [STATS_KEY] });
-                    if (data.keys[0].value) {
-                        const loadedStats = JSON.parse(data.keys[0].value);
-                        if(loadedStats.wins !== undefined && loadedStats.gamesPlayedSinceAd !== undefined) {
-                            stats = loadedStats;
+                    const response = await vkBridge.send('VKWebAppStorageGet', { keys: [`${STATS_VK_KEY_PREFIX}_${vkUserId}`] });
+                    if (response.keys[0]?.value) {
+                        const cloudData = JSON.parse(response.keys[0].value);
+                        if (cloudData.syncVersion === 3 && cloudData.stats) {
+                            stats = cloudData.stats; return;
                         }
                     }
-                } catch (error) { console.error('VK Storage Load Error:', error); }
-                updateStatsDisplay();
+                    loadLocalStats();
+                } catch (err) { loadLocalStats(); }
+            }
+
+            function loadLocalStats() {
+                const localData = localStorage.getItem(STATS_LOCAL_KEY);
+                if (localData) {
+                    try {
+                        const parsedData = JSON.parse(localData);
+                        if (parsedData.stats) stats = parsedData.stats;
+                    } catch { console.error("Ошибка парсинга локальных данных."); }
+                }
             }
 
             // === Event Listeners ===
@@ -269,14 +330,17 @@
                 document.querySelectorAll(`${parentSelector} button`).forEach(btn => btn.classList.remove('active'));
                 target.classList.add('active');
             }
-            function getWinLength() {
-                return boardSize === 3 ? 3 : 4;
-            }
+            function getWinLength() { return boardSize === 3 ? 3 : 4; }
+            
             function startGame() {
-                isGameOver = false; currentPlayer = 'X';
+                isGameOver = false;
+                currentPlayer = gameMode === 'pvc' ? stats.whoStartsNext || 'X' : 'X';
+                
                 boardState = Array(boardSize).fill(null).map(() => Array(boardSize).fill(null));
                 boardElement.innerHTML = '';
                 boardElement.style.setProperty('--board-size', boardSize);
+                winLine.style.display = 'none';
+
                 for (let i = 0; i < boardSize; i++) {
                     for (let j = 0; j < boardSize; j++) {
                         const cell = document.createElement('div');
@@ -288,20 +352,24 @@
                 }
                 statusText.textContent = `Ход ${currentPlayer}`;
                 mainMenu.classList.add('hidden'); gameScreen.classList.remove('hidden');
-                if (gameMode === 'pvc' && currentPlayer !== humanPlayer) {
+                if (gameMode === 'pvc' && currentPlayer === aiPlayer) {
                     setTimeout(aiMove, 500);
                 }
             }
+
             function handleCellClick(e) {
                 if (isGameOver || isPaused) return;
                 const cell = e.target;
                 const row = cell.dataset.row; const col = cell.dataset.col;
                 if (boardState[row][col] || (gameMode === 'pvc' && currentPlayer === aiPlayer)) return;
+                
                 makeMove(row, col, currentPlayer);
-                if (checkWin(currentPlayer)) {
-                    endGame(false);
+                const winInfo = checkWin(currentPlayer);
+
+                if (winInfo) {
+                    endGame(false, winInfo);
                 } else if (isBoardFull()) {
-                    endGame(true);
+                    endGame(true, null);
                 } else {
                     switchPlayer();
                     if (gameMode === 'pvc' && currentPlayer === aiPlayer) {
@@ -319,40 +387,42 @@
                 statusText.textContent = `Ход ${currentPlayer}`;
             }
             
-            // ИСПРАВЛЕНА: Проверка победы для любого размера поля и условия
             function checkWin(player) {
                 const winLength = getWinLength();
                 for (let r = 0; r < boardSize; r++) {
                     for (let c = 0; c < boardSize; c++) {
-                        if (c <= boardSize - winLength) { // Horizontal
-                            let line = true;
-                            for (let i = 0; i < winLength; i++) if (boardState[r][c+i] !== player) line = false;
-                            if(line) return true;
+                        if (c <= boardSize - winLength) {
+                            let line = [];
+                            for (let i = 0; i < winLength; i++) line.push({r:r, c:c+i});
+                            if (line.every(p => boardState[p.r][p.c] === player)) return { win: true, cells: line };
                         }
-                        if (r <= boardSize - winLength) { // Vertical
-                            let line = true;
-                            for (let i = 0; i < winLength; i++) if (boardState[r+i][c] !== player) line = false;
-                            if(line) return true;
+                        if (r <= boardSize - winLength) {
+                            let line = [];
+                            for (let i = 0; i < winLength; i++) line.push({r:r+i, c:c});
+                            if (line.every(p => boardState[p.r][p.c] === player)) return { win: true, cells: line };
                         }
-                        if (r <= boardSize - winLength && c <= boardSize - winLength) { // Diagonal \
-                            let line = true;
-                            for (let i = 0; i < winLength; i++) if (boardState[r+i][c+i] !== player) line = false;
-                            if(line) return true;
+                        if (r <= boardSize - winLength && c <= boardSize - winLength) {
+                            let line = [];
+                            for (let i = 0; i < winLength; i++) line.push({r:r+i, c:c+i});
+                            if (line.every(p => boardState[p.r][p.c] === player)) return { win: true, cells: line };
                         }
-                        if (r <= boardSize - winLength && c >= winLength - 1) { // Diagonal /
-                            let line = true;
-                            for (let i = 0; i < winLength; i++) if (boardState[r+i][c-i] !== player) line = false;
-                            if(line) return true;
+                        if (r <= boardSize - winLength && c >= winLength - 1) {
+                            let line = [];
+                            for (let i = 0; i < winLength; i++) line.push({r:r+i, c:c-i});
+                            if (line.every(p => boardState[p.r][p.c] === player)) return { win: true, cells: line };
                         }
                     }
                 }
-                return false;
+                return null;
             }
 
             function isBoardFull() { return boardState.flat().every(cell => cell !== null); }
             
-            async function endGame(isDraw) {
+            async function endGame(isDraw, winInfo) {
                 isGameOver = true;
+                if (winInfo) {
+                    drawWinningLine(winInfo);
+                }
                 const message = isDraw ? "Ничья!" : `Победил ${currentPlayer}!`;
                 document.getElementById('game-over-message').textContent = message;
                 showOverlay(gameOverOverlay);
@@ -360,6 +430,7 @@
                     if (isDraw) stats.ties++;
                     else if (currentPlayer === humanPlayer) stats.wins++;
                     else stats.losses++;
+                    stats.whoStartsNext = stats.whoStartsNext === 'X' ? 'O' : 'X';
                 }
                 stats.gamesPlayedSinceAd = (stats.gamesPlayedSinceAd || 0) + 1;
                 await saveStats();
@@ -374,6 +445,36 @@
                     } catch (error) { console.error('Interstitial Ad Error:', error); }
                 }
             }
+            
+            function drawWinningLine(winInfo) {
+                const startCell = document.querySelector(`[data-row='${winInfo.cells[0].r}'][data-col='${winInfo.cells[0].c}']`);
+                const endCell = document.querySelector(`[data-row='${winInfo.cells[winInfo.cells.length - 1].r}'][data-col='${winInfo.cells[winInfo.cells.length - 1].c}']`);
+                
+                const boardRect = boardElement.getBoundingClientRect();
+                const startRect = startCell.getBoundingClientRect();
+                const endRect = endCell.getBoundingClientRect();
+
+                const x1 = startRect.left + startRect.width / 2 - boardRect.left;
+                const y1 = startRect.top + startRect.height / 2 - boardRect.top;
+                const x2 = endRect.left + endRect.width / 2 - boardRect.left;
+                const y2 = endRect.top + endRect.height / 2 - boardRect.top;
+
+                winLine.setAttribute('x1', x1);
+                winLine.setAttribute('y1', y1);
+                winLine.setAttribute('x2', x2);
+                winLine.setAttribute('y2', y2);
+                winLine.style.stroke = `var(--${currentPlayer.toLowerCase()}-color)`;
+                
+                const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+                winLine.style.strokeDasharray = length;
+                winLine.style.strokeDashoffset = length;
+                winLine.style.display = 'block';
+                
+                setTimeout(() => {
+                    winLine.style.strokeDashoffset = 0;
+                }, 100);
+            }
+
             function togglePause() { isPaused = !isPaused; isPaused ? showOverlay(pauseOverlay) : hideOverlay(pauseOverlay); }
             function showOverlay(overlay) { overlay.classList.add('active'); }
             function hideOverlay(overlay) { overlay.classList.remove('active'); }
@@ -386,19 +487,13 @@
             }
 
             // === AI LOGIC ===
-            function getMovesMade() {
-                return boardState.flat().filter(Boolean).length;
-            }
-
-            // ИСПРАВЛЕНА: Логика выбора хода
+            function getMovesMade() { return boardState.flat().filter(Boolean).length; }
             function findBestMove() {
-                // ИСПРАВЛЕНИЕ: Первый ход ИИ в 3x3 всегда случайный
                 if (boardSize === 3 && getMovesMade() <= 1) {
                     const emptyCells = [];
                     for(let i=0; i<boardSize; i++) for(let j=0; j<boardSize; j++) if(!boardState[i][j]) emptyCells.push({row: i, col: j});
                     return emptyCells[Math.floor(Math.random() * emptyCells.length)];
                 }
-                
                 let bestVal = -Infinity;
                 let bestMoves = [];
                 for (let i = 0; i < boardSize; i++) {
@@ -416,12 +511,9 @@
                         }
                     }
                 }
-                if (bestMoves.length > 0) {
-                    return bestMoves[Math.floor(Math.random() * bestMoves.length)];
-                }
+                if (bestMoves.length > 0) return bestMoves[Math.floor(Math.random() * bestMoves.length)];
                 return null;
             }
-            
             function aiMove() {
                 if (isGameOver) return;
                 statusText.textContent = `Думает ${aiPlayer}...`;
@@ -429,32 +521,28 @@
                     const bestMove = findBestMove();
                     if (bestMove) {
                         makeMove(bestMove.row, bestMove.col, aiPlayer);
-                        if (checkWin(aiPlayer)) { endGame(false); } 
-                        else if (isBoardFull()) { endGame(true); } 
+                        const winInfo = checkWin(aiPlayer);
+                        if (winInfo) { endGame(false, winInfo); } 
+                        else if (isBoardFull()) { endGame(true, null); } 
                         else { switchPlayer(); }
-                    } else {
-                         console.error("AI couldn't find a move."); // Если ходов нет
-                    }
+                    } else { console.error("AI couldn't find a move."); }
                 });
             }
-            
-            // ИСПРАВЛЕНА: Основная функция минимакса с умной оценкой
             function minimax(depth, isMaximizing, alpha, beta) {
-                if (checkWin(aiPlayer)) return 100000 - depth;
-                if (checkWin(humanPlayer)) return -100000 + depth;
+                const winInfoAI = checkWin(aiPlayer);
+                if (winInfoAI) return 100000 - depth;
+                const winInfoHuman = checkWin(humanPlayer);
+                if (winInfoHuman) return -100000 + depth;
                 if (isBoardFull()) return 0;
                 if (depth >= getSearchDepth()) return evaluateBoard();
-
                 let bestVal = isMaximizing ? -Infinity : Infinity;
                 const player = isMaximizing ? aiPlayer : humanPlayer;
-
                 for (let i = 0; i < boardSize; i++) {
                     for (let j = 0; j < boardSize; j++) {
                         if (boardState[i][j] === null) {
                             boardState[i][j] = player;
                             const score = minimax(depth + 1, !isMaximizing, alpha, beta);
                             boardState[i][j] = null;
-                            
                             if (isMaximizing) {
                                 bestVal = Math.max(bestVal, score);
                                 alpha = Math.max(alpha, bestVal);
@@ -468,54 +556,45 @@
                 }
                 return bestVal;
             }
-            
             function getSearchDepth() {
                 if (boardSize === 3) return 9;
                 if (boardSize === 4) return 4;
                 return 3; 
             }
-            
-            // УЛУЧШЕНА: Функция оценки для больших полей
             function evaluateBoard() {
-                if (boardSize === 3) return 0; // Для 3х3 не нужна, минимакс и так все просчитает
+                if (boardSize === 3) return 0;
                 let totalScore = 0;
                 const winLength = getWinLength();
-
                 const evaluateWindow = (window) => {
                     let score = 0;
                     const aiCount = window.filter(p => p === aiPlayer).length;
                     const humanCount = window.filter(p => p === humanPlayer).length;
-
-                    if (aiCount > 0 && humanCount > 0) return 0; // Блокированная линия
+                    if (aiCount > 0 && humanCount > 0) return 0;
                     if (aiCount > 0) {
                         if (aiCount === winLength - 1) score += 5000;
                         else if (aiCount === winLength - 2) score += 100;
                         else score += 10;
                     } else if (humanCount > 0) {
-                        if (humanCount === winLength - 1) score -= 10000; // Блокировка важнее
+                        if (humanCount === winLength - 1) score -= 10000;
                         else if (humanCount === winLength - 2) score -= 500;
                         else score -= 20;
                     }
                     return score;
                 };
-
-                // Проверяем все возможные "окна" нужной длины
                 for (let r = 0; r < boardSize; r++) {
                     for (let c = 0; c < boardSize; c++) {
-                        if (c <= boardSize - winLength) { // Горизонтали
-                            totalScore += evaluateWindow(boardState[r].slice(c, c + winLength));
-                        }
-                        if (r <= boardSize - winLength) { // Вертикали
+                        if (c <= boardSize - winLength) { totalScore += evaluateWindow(boardState[r].slice(c, c + winLength)); }
+                        if (r <= boardSize - winLength) {
                             let window = [];
                             for(let i=0; i<winLength; i++) window.push(boardState[r+i][c]);
                             totalScore += evaluateWindow(window);
                         }
-                        if (r <= boardSize - winLength && c <= boardSize - winLength) { // Диагонали \
+                        if (r <= boardSize - winLength && c <= boardSize - winLength) {
                             let window = [];
                             for(let i=0; i<winLength; i++) window.push(boardState[r+i][c+i]);
                             totalScore += evaluateWindow(window);
                         }
-                        if (r <= boardSize - winLength && c >= winLength - 1) { // Диагонали /
+                        if (r <= boardSize - winLength && c >= winLength - 1) {
                             let window = [];
                             for(let i=0; i<winLength; i++) window.push(boardState[r+i][c-i]);
                             totalScore += evaluateWindow(window);
@@ -526,7 +605,7 @@
             }
 
             // === Initial Load ===
-            initApp();
+            initVK();
         });
     </script>
 </body>
