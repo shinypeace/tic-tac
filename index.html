@@ -198,7 +198,7 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', () => {
             // === DOM Elements and State ===
             const mainMenu = document.getElementById('main-menu'), gameScreen = document.getElementById('game-screen'),
                   boardElement = document.getElementById('board'), statusText = document.getElementById('status-text'),
@@ -208,68 +208,41 @@
             let boardSize = 3, gameMode = 'pvc', currentPlayer = 'X', boardState = [],
                 isGameOver = false, isPaused = false, humanPlayer = 'X', aiPlayer = 'O',
                 stats = { wins: 0, losses: 0, ties: 0, gamesPlayedSinceAd: 0 };
+            const STATS_KEY = 'ticTacToeUserStats_v2'; 
 
             // === VK Integration ===
-            const APP_ID = 53865837; // ❗❗❗ ВАЖНО: ВСТАВЬТЕ ID ВАШЕГО ПРИЛОЖЕНИЯ ЗДЕСЬ
-            const STORAGE_KEY_PREFIX = 'ticTacToe_stats';
-            let vkUserId = null;
-
-            async function init() {
-                if (APP_ID === 0) {
-                    console.warn("Необходимо указать ID приложения в переменной APP_ID");
-                }
+            async function initApp() {
                 try {
                     await vkBridge.send('VKWebAppInit');
-                    const user = await vkBridge.send('VKWebAppGetUserInfo');
-                    vkUserId = user.id;
-                    console.log("VK User ID:", vkUserId);
-
+                    await loadStats();
                     vkBridge.send('VKWebAppShowBannerAd', {
                         banner_location: 'bottom'
                     }).catch(e => console.error("Banner ad error", e));
-
                 } catch (error) {
-                    console.error("VK Init Error, falling back to guest mode.", error);
-                    vkUserId = localStorage.getItem('guestUserId') || `guest_${Date.now()}`;
-                    localStorage.setItem('guestUserId', vkUserId);
-                    console.log("Guest User ID:", vkUserId);
+                    console.error('VK App Init Error:', error);
+                    updateStatsDisplay();
                 }
-                await loadStats();
+            }
+            async function saveStats() {
+                try {
+                    await vkBridge.send('VKWebAppStorageSet', {
+                        key: STATS_KEY, value: JSON.stringify(stats)
+                    });
+                } catch (error) { console.error('VK Storage Save Error:', error); }
+            }
+            async function loadStats() {
+                try {
+                    const data = await vkBridge.send('VKWebAppStorageGet', { keys: [STATS_KEY] });
+                    if (data.keys[0].value) {
+                        const loadedStats = JSON.parse(data.keys[0].value);
+                        if(loadedStats.wins !== undefined && loadedStats.gamesPlayedSinceAd !== undefined) {
+                            stats = loadedStats;
+                        }
+                    }
+                } catch (error) { console.error('VK Storage Load Error:', error); }
                 updateStatsDisplay();
             }
 
-            async function saveStats() {
-                const storageKey = `${STORAGE_KEY_PREFIX}_${vkUserId}`;
-                const dataToSave = JSON.stringify(stats);
-                try {
-                    await vkBridge.send('VKWebAppStorageSet', { key: storageKey, value: dataToSave });
-                } catch (error) {
-                    localStorage.setItem(storageKey, dataToSave);
-                }
-            }
-
-            async function loadStats() {
-                if (!vkUserId) return;
-                const storageKey = `${STORAGE_KEY_PREFIX}_${vkUserId}`;
-                let loadedData = null;
-                try {
-                    const response = await vkBridge.send('VKWebAppStorageGet', { keys: [storageKey] });
-                    if (response.keys[0]?.value) {
-                        loadedData = response.keys[0].value;
-                    }
-                } catch (error) {
-                    loadedData = localStorage.getItem(storageKey);
-                }
-                if (!loadedData) {
-                   loadedData = localStorage.getItem(storageKey);
-                }
-                if (loadedData) {
-                    try {
-                        stats = JSON.parse(loadedData);
-                    } catch(e) { console.error("Failed to parse stats", e)}
-                }
-            }
-            
             // === Event Listeners ===
             document.getElementById('board-size-selector').addEventListener('click', (e) => {
                 if (e.target.tagName === 'BUTTON') {
@@ -345,35 +318,39 @@
                 currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
                 statusText.textContent = `Ход ${currentPlayer}`;
             }
+            
+            // ИСПРАВЛЕНА: Проверка победы для любого размера поля и условия
             function checkWin(player) {
                 const winLength = getWinLength();
-                // Rows and Columns
-                for (let i = 0; i < boardSize; i++) {
-                    for (let j = 0; j <= boardSize - winLength; j++) {
-                        let rowWin = true, colWin = true;
-                        for (let k = 0; k < winLength; k++) {
-                            if (boardState[i][j + k] !== player) rowWin = false;
-                            if (boardState[j + k][i] !== player) colWin = false;
+                for (let r = 0; r < boardSize; r++) {
+                    for (let c = 0; c < boardSize; c++) {
+                        if (c <= boardSize - winLength) { // Horizontal
+                            let line = true;
+                            for (let i = 0; i < winLength; i++) if (boardState[r][c+i] !== player) line = false;
+                            if(line) return true;
                         }
-                        if (rowWin || colWin) return true;
-                    }
-                }
-                // Diagonals
-                for (let i = 0; i <= boardSize - winLength; i++) {
-                    for (let j = 0; j <= boardSize - winLength; j++) {
-                        let diag1Win = true, diag2Win = true;
-                        for (let k = 0; k < winLength; k++) {
-                            if (boardState[i + k][j + k] !== player) diag1Win = false;
-                            if (boardState[i + k][j + winLength - 1 - k] !== player) diag2Win = false;
+                        if (r <= boardSize - winLength) { // Vertical
+                            let line = true;
+                            for (let i = 0; i < winLength; i++) if (boardState[r+i][c] !== player) line = false;
+                            if(line) return true;
                         }
-                        if (diag1Win || diag2Win) return true;
+                        if (r <= boardSize - winLength && c <= boardSize - winLength) { // Diagonal \
+                            let line = true;
+                            for (let i = 0; i < winLength; i++) if (boardState[r+i][c+i] !== player) line = false;
+                            if(line) return true;
+                        }
+                        if (r <= boardSize - winLength && c >= winLength - 1) { // Diagonal /
+                            let line = true;
+                            for (let i = 0; i < winLength; i++) if (boardState[r+i][c-i] !== player) line = false;
+                            if(line) return true;
+                        }
                     }
                 }
                 return false;
             }
-            function isBoardFull() {
-                return boardState.flat().every(cell => cell !== null);
-            }
+
+            function isBoardFull() { return boardState.flat().every(cell => cell !== null); }
+            
             async function endGame(isDraw) {
                 isGameOver = true;
                 const message = isDraw ? "Ничья!" : `Победил ${currentPlayer}!`;
@@ -413,8 +390,9 @@
                 return boardState.flat().filter(Boolean).length;
             }
 
+            // ИСПРАВЛЕНА: Логика выбора хода
             function findBestMove() {
-                // Special case for 3x3: first move is random
+                // ИСПРАВЛЕНИЕ: Первый ход ИИ в 3x3 всегда случайный
                 if (boardSize === 3 && getMovesMade() <= 1) {
                     const emptyCells = [];
                     for(let i=0; i<boardSize; i++) for(let j=0; j<boardSize; j++) if(!boardState[i][j]) emptyCells.push({row: i, col: j});
@@ -438,113 +416,118 @@
                         }
                     }
                 }
-                return bestMoves.length > 0 ? bestMoves[Math.floor(Math.random() * bestMoves.length)] : null;
+                if (bestMoves.length > 0) {
+                    return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+                }
+                return null;
             }
-
+            
+            function aiMove() {
+                if (isGameOver) return;
+                statusText.textContent = `Думает ${aiPlayer}...`;
+                requestAnimationFrame(() => {
+                    const bestMove = findBestMove();
+                    if (bestMove) {
+                        makeMove(bestMove.row, bestMove.col, aiPlayer);
+                        if (checkWin(aiPlayer)) { endGame(false); } 
+                        else if (isBoardFull()) { endGame(true); } 
+                        else { switchPlayer(); }
+                    } else {
+                         console.error("AI couldn't find a move."); // Если ходов нет
+                    }
+                });
+            }
+            
+            // ИСПРАВЛЕНА: Основная функция минимакса с умной оценкой
             function minimax(depth, isMaximizing, alpha, beta) {
                 if (checkWin(aiPlayer)) return 100000 - depth;
                 if (checkWin(humanPlayer)) return -100000 + depth;
-                if (isBoardFull() || depth >= getSearchDepth()) {
-                    return evaluateBoard();
-                }
+                if (isBoardFull()) return 0;
+                if (depth >= getSearchDepth()) return evaluateBoard();
 
-                if (isMaximizing) {
-                    let best = -Infinity;
-                    for (let i = 0; i < boardSize; i++) {
-                        for (let j = 0; j < boardSize; j++) {
-                            if (boardState[i][j] === null) {
-                                boardState[i][j] = aiPlayer;
-                                best = Math.max(best, minimax(depth + 1, !isMaximizing, alpha, beta));
-                                boardState[i][j] = null;
-                                alpha = Math.max(alpha, best);
-                                if (beta <= alpha) return best;
+                let bestVal = isMaximizing ? -Infinity : Infinity;
+                const player = isMaximizing ? aiPlayer : humanPlayer;
+
+                for (let i = 0; i < boardSize; i++) {
+                    for (let j = 0; j < boardSize; j++) {
+                        if (boardState[i][j] === null) {
+                            boardState[i][j] = player;
+                            const score = minimax(depth + 1, !isMaximizing, alpha, beta);
+                            boardState[i][j] = null;
+                            
+                            if (isMaximizing) {
+                                bestVal = Math.max(bestVal, score);
+                                alpha = Math.max(alpha, bestVal);
+                            } else {
+                                bestVal = Math.min(bestVal, score);
+                                beta = Math.min(beta, bestVal);
                             }
+                            if (beta <= alpha) return bestVal;
                         }
                     }
-                    return best;
-                } else {
-                    let best = Infinity;
-                    for (let i = 0; i < boardSize; i++) {
-                        for (let j = 0; j < boardSize; j++) {
-                            if (boardState[i][j] === null) {
-                                boardState[i][j] = humanPlayer;
-                                best = Math.min(best, minimax(depth + 1, !isMaximizing, alpha, beta));
-                                boardState[i][j] = null;
-                                beta = Math.min(beta, best);
-                                if (beta <= alpha) return best;
-                            }
-                        }
-                    }
-                    return best;
                 }
+                return bestVal;
             }
             
             function getSearchDepth() {
                 if (boardSize === 3) return 9;
                 if (boardSize === 4) return 4;
-                return 3; // Для 5х5 глубина 3, но с умной оценкой
+                return 3; 
             }
             
+            // УЛУЧШЕНА: Функция оценки для больших полей
             function evaluateBoard() {
-                if (boardSize === 3) return 0; // Для 3х3 достаточно простой оценки победы/поражения
-                let score = 0;
-                const lines = getAllLines();
-                lines.forEach(line => {
-                    score += evaluateLine(line);
-                });
-                return score;
-            }
-
-            function evaluateLine(line) {
-                let aiCount = 0, humanCount = 0;
-                for(const cell of line) {
-                    if(cell === aiPlayer) aiCount++;
-                    else if(cell === humanPlayer) humanCount++;
-                }
-
-                if(aiCount > 0 && humanCount > 0) return 0; // Линия заблокирована
-
+                if (boardSize === 3) return 0; // Для 3х3 не нужна, минимакс и так все просчитает
+                let totalScore = 0;
                 const winLength = getWinLength();
-                if(aiCount === winLength - 1) return 5000; // Почти победа ИИ
-                if(humanCount === winLength - 1) return -10000; // Почти победа человека (блокировать важнее)
-                if(aiCount === winLength - 2) return 100; // Хорошая позиция ИИ
-                if(humanCount === winLength - 2) return -500; // Угроза от человека
-                if(aiCount > 0) return 1;
-                if(humanCount > 0) return -5;
-                
-                return 0;
-            }
-            
-            function getAllLines() {
-                const lines = [];
-                // Rows and Columns
-                for(let i=0; i<boardSize; i++){
-                    let row = [], col = [];
-                    for(let j=0; j<boardSize; j++) {
-                        row.push(boardState[i][j]);
-                        col.push(boardState[j][i]);
+
+                const evaluateWindow = (window) => {
+                    let score = 0;
+                    const aiCount = window.filter(p => p === aiPlayer).length;
+                    const humanCount = window.filter(p => p === humanPlayer).length;
+
+                    if (aiCount > 0 && humanCount > 0) return 0; // Блокированная линия
+                    if (aiCount > 0) {
+                        if (aiCount === winLength - 1) score += 5000;
+                        else if (aiCount === winLength - 2) score += 100;
+                        else score += 10;
+                    } else if (humanCount > 0) {
+                        if (humanCount === winLength - 1) score -= 10000; // Блокировка важнее
+                        else if (humanCount === winLength - 2) score -= 500;
+                        else score -= 20;
                     }
-                    lines.push(row, col);
-                }
-                // Diagonals
-                for (let k = 0; k <= 2 * (boardSize - 1); k++) {
-                    let d1 = [], d2 = [];
-                    for (let y = 0; y < boardSize; y++) {
-                        let x = k - y;
-                        if (x >= 0 && x < boardSize) d1.push(boardState[y][x]);
-                        x = k - (boardSize - 1 - y);
-                        if (x >= 0 && x < boardSize) d2.push(boardState[y][x]);
+                    return score;
+                };
+
+                // Проверяем все возможные "окна" нужной длины
+                for (let r = 0; r < boardSize; r++) {
+                    for (let c = 0; c < boardSize; c++) {
+                        if (c <= boardSize - winLength) { // Горизонтали
+                            totalScore += evaluateWindow(boardState[r].slice(c, c + winLength));
+                        }
+                        if (r <= boardSize - winLength) { // Вертикали
+                            let window = [];
+                            for(let i=0; i<winLength; i++) window.push(boardState[r+i][c]);
+                            totalScore += evaluateWindow(window);
+                        }
+                        if (r <= boardSize - winLength && c <= boardSize - winLength) { // Диагонали \
+                            let window = [];
+                            for(let i=0; i<winLength; i++) window.push(boardState[r+i][c+i]);
+                            totalScore += evaluateWindow(window);
+                        }
+                        if (r <= boardSize - winLength && c >= winLength - 1) { // Диагонали /
+                            let window = [];
+                            for(let i=0; i<winLength; i++) window.push(boardState[r+i][c-i]);
+                            totalScore += evaluateWindow(window);
+                        }
                     }
-                    if(d1.length >= getWinLength()) lines.push(d1);
-                    if(d2.length >= getWinLength()) lines.push(d2);
                 }
-                return lines;
+                return totalScore;
             }
 
             // === Initial Load ===
-            init();
+            initApp();
         });
     </script>
-
 </body>
 </html>
