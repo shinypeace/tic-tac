@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no, user-scalable=no, viewport-fit=cover">
-    <title>Tic-Tac-Toe for VK</title>
-    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    <title>Tic-Tac-Toe Advanced</title>
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/vk-bridge.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
@@ -22,19 +22,8 @@
             --board-size: 3;
             --cell-gap: 10px;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; width: 100%; overflow: hidden; }
         body {
             font-family: 'Montserrat', sans-serif;
             background-color: var(--bg-color);
@@ -43,7 +32,6 @@
             justify-content: center;
             align-items: center;
         }
-
         .container {
             width: 100%;
             max-width: 500px;
@@ -53,33 +41,24 @@
             align-items: center;
             justify-content: center;
         }
-
-        /* --- Main Menu --- */
+        .main-menu, .game-screen { width: 100%; }
         .main-menu {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 20px;
             text-align: center;
-            width: 100%;
-            transition: opacity var(--transition-speed), transform var(--transition-speed);
         }
-
-        .main-menu.hidden, .game-screen.hidden {
-            display: none;
-        }
-
+        .main-menu.hidden, .game-screen.hidden { display: none; }
         .title {
             font-size: 2.5rem;
             font-weight: 700;
             letter-spacing: 2px;
             background: linear-gradient(90deg, var(--x-color), var(--o-color));
             -webkit-background-clip: text;
-            background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 20px;
         }
-
         .menu-section {
             background-color: var(--primary-color);
             padding: 20px;
@@ -89,7 +68,6 @@
             flex-direction: column;
             gap: 15px;
         }
-        
         .menu-section h3 {
             font-size: 1.2rem;
             border-bottom: 2px solid var(--secondary-color);
@@ -97,184 +75,68 @@
             margin-bottom: 5px;
             font-weight: 600;
         }
-
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            width: 100%;
-        }
-
+        .btn-group { display: flex; gap: 10px; width: 100%; }
         .btn {
-            flex-grow: 1;
-            padding: 15px 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            background-color: var(--secondary-color);
-            color: var(--text-color);
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
+            flex-grow: 1; padding: 15px 10px; font-size: 1rem; font-weight: 600;
+            background-color: var(--secondary-color); color: var(--text-color);
+            border: none; border-radius: 8px; cursor: pointer;
             transition: background-color var(--transition-speed), transform var(--transition-speed);
             border: 2px solid transparent;
         }
-
-        .btn:hover {
-            transform: translateY(-3px);
-            background-color: #4a4a4a;
-        }
-
-        .btn.active {
-            background-color: var(--accent-color);
-            color: var(--bg-color);
-            border-color: var(--accent-color);
-        }
-
+        .btn:hover { transform: translateY(-3px); background-color: #4a4a4a; }
+        .btn.active { background-color: var(--accent-color); color: var(--bg-color); border-color: var(--accent-color); }
         .start-btn {
-            padding: 18px;
-            font-size: 1.2rem;
-            font-weight: 700;
+            padding: 18px; font-size: 1.2rem; font-weight: 700;
             background: linear-gradient(90deg, var(--x-color), var(--o-color));
-            color: var(--text-color);
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+            color: var(--text-color); border: none; border-radius: 8px;
+            cursor: pointer; transition: transform var(--transition-speed), box-shadow var(--transition-speed);
             margin-top: 10px;
         }
-
         .start-btn:hover {
             transform: scale(1.05);
             box-shadow: 0 0 20px rgba(0, 217, 255, 0.5), 0 0 20px rgba(255, 0, 127, 0.5);
         }
-
-        #stats-display {
-            font-size: 0.9rem;
-            color: #aaa;
-            margin-top: 10px;
-        }
-        
-        /* --- Game Screen --- */
-        .game-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-            width: 100%;
-            max-width: 500px;
-        }
-        
-        .game-header {
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        #status-text {
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-
-        #pause-btn {
-            background: none;
-            border: none;
-            color: var(--text-color);
-            font-size: 1.8rem;
-            cursor: pointer;
-            transition: color var(--transition-speed);
-        }
-        #pause-btn:hover {
-            color: var(--accent-color);
-        }
-
+        #stats-display { font-size: 0.9rem; color: #aaa; margin-top: 10px; }
+        .game-screen { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+        .game-header { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+        #status-text { font-size: 1.5rem; font-weight: 600; }
+        #pause-btn { background: none; border: none; color: var(--text-color); font-size: 1.8rem; cursor: pointer; transition: color var(--transition-speed); }
+        #pause-btn:hover { color: var(--accent-color); }
         #board {
-            display: grid;
-            grid-template-columns: repeat(var(--board-size), 1fr);
-            gap: var(--cell-gap);
-            width: 100%;
-            background-color: var(--primary-color);
-            padding: var(--cell-gap);
-            border-radius: var(--border-radius);
+            display: grid; grid-template-columns: repeat(var(--board-size), 1fr);
+            gap: var(--cell-gap); width: 100%; background-color: var(--primary-color);
+            padding: var(--cell-gap); border-radius: var(--border-radius);
         }
-
         .cell {
-            aspect-ratio: 1 / 1;
-            background-color: var(--secondary-color);
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: background-color var(--transition-speed);
+            aspect-ratio: 1 / 1; background-color: var(--secondary-color);
+            border-radius: 8px; display: flex; justify-content: center;
+            align-items: center; cursor: pointer; transition: background-color var(--transition-speed);
         }
-        
-        .cell:not(.x):not(.o):hover {
-            background-color: #4a4a4a;
-        }
-
+        .cell:not(.x):not(.o):hover { background-color: #4a4a4a; }
         .cell.x, .cell.o {
-            cursor: not-allowed;
-            font-size: min(10vw, calc(300px / var(--board-size) * 0.7));
-            font-weight: 700;
-            line-height: 1;
+            cursor: not-allowed; font-size: min(10vw, calc(300px / var(--board-size) * 0.7));
+            font-weight: 700; line-height: 1;
         }
-        
         .cell.x { color: var(--x-color); }
         .cell.o { color: var(--o-color); }
-        
-        /* --- Overlay Styles --- */
         .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(26, 26, 26, 0.8);
-            backdrop-filter: blur(5px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity var(--transition-speed);
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(26, 26, 26, 0.8); backdrop-filter: blur(5px);
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity var(--transition-speed);
             z-index: 1000;
         }
-
-        .overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        
+        .overlay.active { opacity: 1; pointer-events: auto; }
         .overlay-content {
-            background-color: var(--primary-color);
-            padding: 40px;
-            border-radius: var(--border-radius);
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            transform: scale(0.9);
-            transition: transform var(--transition-speed);
+            background-color: var(--primary-color); padding: 40px; border-radius: var(--border-radius);
+            text-align: center; display: flex; flex-direction: column; gap: 20px;
+            transform: scale(0.9); transition: transform var(--transition-speed);
         }
-        
-        .overlay.active .overlay-content {
-            transform: scale(1);
-        }
-
-        .overlay-content h2 {
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
-        
-        .overlay-content .btn-group {
-            flex-direction: column;
-        }
-
-        /* Responsive Design */
+        .overlay.active .overlay-content { transform: scale(1); }
+        .overlay-content h2 { font-size: 2rem; margin-bottom: 10px; }
+        .overlay-content .btn-group { flex-direction: column; }
         @media (max-width: 500px) {
-            :root {
-                --cell-gap: 5px;
-            }
+            :root { --cell-gap: 5px; }
             .title { font-size: 2rem; }
             #status-text { font-size: 1.2rem; }
             .btn { padding: 12px 8px; font-size: 0.9rem;}
@@ -282,7 +144,6 @@
             .overlay-content { padding: 30px; width: calc(100% - 40px); }
             .overlay-content h2 { font-size: 1.8rem; }
         }
-
     </style>
 </head>
 <body>
@@ -293,9 +154,9 @@
             <div class="menu-section">
                 <h3>Размер Поля</h3>
                 <div class="btn-group" id="board-size-selector">
-                    <button class="btn active" data-size="3">3x3</button>
-                    <button class="btn" data-size="4">4x4</button>
-                    <button class="btn" data-size="5">5x5</button>
+                    <button class="btn active" data-size="3">3x3 (3 в ряд)</button>
+                    <button class="btn" data-size="4">4x4 (4 в ряд)</button>
+                    <button class="btn" data-size="5">5x5 (4 в ряд)</button>
                 </div>
             </div>
             <div class="menu-section">
@@ -308,7 +169,6 @@
             <button id="start-game-btn" class="start-btn">Начать Игру</button>
             <div id="stats-display">Загрузка статистики...</div>
         </div>
-
         <div id="game-screen" class="game-screen hidden">
             <div class="game-header">
                 <div id="status-text">Ход X</div>
@@ -317,7 +177,6 @@
             <div id="board"></div>
         </div>
     </div>
-
     <div id="pause-overlay" class="overlay">
         <div class="overlay-content">
             <h2>Пауза</h2>
@@ -328,7 +187,6 @@
             </div>
         </div>
     </div>
-
     <div id="game-over-overlay" class="overlay">
         <div class="overlay-content">
             <h2 id="game-over-message"></h2>
@@ -339,293 +197,134 @@
         </div>
     </div>
 
-
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', () => {
             // === DOM Elements and State ===
-            const mainMenu = document.getElementById('main-menu');
-            const gameScreen = document.getElementById('game-screen');
-            const boardElement = document.getElementById('board');
-            const statusText = document.getElementById('status-text');
-            const pauseBtn = document.getElementById('pause-btn');
-            const pauseOverlay = document.getElementById('pause-overlay');
-            const gameOverOverlay = document.getElementById('game-over-overlay');
-            const statsDisplay = document.getElementById('stats-display');
+            const mainMenu = document.getElementById('main-menu'), gameScreen = document.getElementById('game-screen'),
+                  boardElement = document.getElementById('board'), statusText = document.getElementById('status-text'),
+                  pauseBtn = document.getElementById('pause-btn'), pauseOverlay = document.getElementById('pause-overlay'),
+                  gameOverOverlay = document.getElementById('game-over-overlay'), statsDisplay = document.getElementById('stats-display');
 
-            let boardSize = 3;
-            let gameMode = 'pvc';
-            let currentPlayer = 'X';
-            let boardState = [];
-            let isGameOver = false;
-            let isPaused = false;
-            let humanPlayer = 'X';
-            let aiPlayer = 'O';
-            let stats = { wins: 0, losses: 0, ties: 0, gamesPlayedSinceAd: 0 };
+            let boardSize = 3, gameMode = 'pvc', currentPlayer = 'X', boardState = [],
+                isGameOver = false, isPaused = false, humanPlayer = 'X', aiPlayer = 'O',
+                stats = { wins: 0, losses: 0, ties: 0, gamesPlayedSinceAd: 0 };
 
             // === VK Integration ===
-            const APP_ID = 53865837;
-            const STATS_VK_KEY_PREFIX = 'ticTacToeStats';
-            const STATS_LOCAL_KEY = 'ticTacToeLocalSave';
-
-            let vkUser = null;
+            const APP_ID = 53865837; // ❗❗❗ ВАЖНО: ВСТАВЬТЕ ID ВАШЕГО ПРИЛОЖЕНИЯ ЗДЕСЬ
+            const STORAGE_KEY_PREFIX = 'ticTacToe_stats';
             let vkUserId = null;
-            let vkAccessToken = null;
-            
-            // Инициализация VK Bridge
-        async function initVK() {
-            try {
-                await vkBridge.send('VKWebAppInit', {});
-                
-                // Получаем информацию о пользователе
-                const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
-                vkUser = userInfo;
-                vkUserId = userInfo.id;
-                
-                // Получаем токен доступа
-                const tokenData = await vkBridge.send('VKWebAppGetAuthToken', {
-                    app_id: APP_ID,
-                    scope: 'storage'
-                });
-                vkAccessToken = tokenData.access_token;
-                
-                // Загружаем статистику
-                await loadStats();
-                
-                console.log('VK Bridge инициализирован');
-            } catch (error) {
-                console.error('Ошибка инициализации VK Bridge:', error);
-                // Загружаем локальные данные, если не удалось подключиться к VK
-                loadLocalStats();
-            }
-        }
-        await initVK();
-            
-            async function saveStats() {
-                const dataToSave = {
-                    stats: stats,
-                    lastUpdated: Date.now(),
-                    syncVersion: 1
-                };
-                const dataString = JSON.stringify(dataToSave);
-                
-                // Всегда сохраняем локально как резервную копию
-                localStorage.setItem(STATS_LOCAL_KEY, dataString);
 
-                // Пытаемся сохранить в облако VK
-                if (vkUserId) {
-                    try {
-                        await vkBridge.send('VKWebAppStorageSet', {
-                            key: `${STATS_VK_KEY_PREFIX}_${vkUserId}`,
-                            value: dataString,
-                        });
-                        console.log("Статистика сохранена в VK Storage.");
-                    } catch (err) {
-                        console.error('Ошибка сохранения в VK Storage:', err);
-                    }
+            async function init() {
+                if (APP_ID === 0) {
+                    console.warn("Необходимо указать ID приложения в переменной APP_ID");
                 }
-            }
-            
-            async function loadStats() {
-                if (!vkUserId) {
-                    loadLocalStats();
-                    updateStatsDisplay();
-                    return;
-                }
-
                 try {
-                    const response = await vkBridge.send('VKWebAppStorageGet', {
-                        keys: [`${STATS_VK_KEY_PREFIX}_${vkUserId}`]
-                    });
-                    
+                    await vkBridge.send('VKWebAppInit');
+                    const user = await vkBridge.send('VKWebAppGetUserInfo');
+                    vkUserId = user.id;
+                    console.log("VK User ID:", vkUserId);
+
+                    vkBridge.send('VKWebAppShowBannerAd', {
+                        banner_location: 'bottom'
+                    }).catch(e => console.error("Banner ad error", e));
+
+                } catch (error) {
+                    console.error("VK Init Error, falling back to guest mode.", error);
+                    vkUserId = localStorage.getItem('guestUserId') || `guest_${Date.now()}`;
+                    localStorage.setItem('guestUserId', vkUserId);
+                    console.log("Guest User ID:", vkUserId);
+                }
+                await loadStats();
+                updateStatsDisplay();
+            }
+
+            async function saveStats() {
+                const storageKey = `${STORAGE_KEY_PREFIX}_${vkUserId}`;
+                const dataToSave = JSON.stringify(stats);
+                try {
+                    await vkBridge.send('VKWebAppStorageSet', { key: storageKey, value: dataToSave });
+                } catch (error) {
+                    localStorage.setItem(storageKey, dataToSave);
+                }
+            }
+
+            async function loadStats() {
+                if (!vkUserId) return;
+                const storageKey = `${STORAGE_KEY_PREFIX}_${vkUserId}`;
+                let loadedData = null;
+                try {
+                    const response = await vkBridge.send('VKWebAppStorageGet', { keys: [storageKey] });
                     if (response.keys[0]?.value) {
-                        const cloudData = JSON.parse(response.keys[0].value);
-                        if (cloudData.syncVersion === 1 && cloudData.stats) {
-                            stats = cloudData.stats;
-                            console.log("Статистика загружена из VK Storage.");
-                            updateStatsDisplay();
-                            return;
-                        }
+                        loadedData = response.keys[0].value;
                     }
-                    // Если в облаке нет валидных данных, пробуем локальные
-                    loadLocalStats();
-                    updateStatsDisplay();
-                } catch (err) {
-                    console.error('Ошибка загрузки из VK Storage:', err);
-                    loadLocalStats();
-                    updateStatsDisplay();
+                } catch (error) {
+                    loadedData = localStorage.getItem(storageKey);
+                }
+                if (!loadedData) {
+                   loadedData = localStorage.getItem(storageKey);
+                }
+                if (loadedData) {
+                    try {
+                        stats = JSON.parse(loadedData);
+                    } catch(e) { console.error("Failed to parse stats", e)}
                 }
             }
             
-            function loadLocalStats() {
-                const localData = localStorage.getItem(STATS_LOCAL_KEY);
-                if (localData) {
-                    try {
-                        const parsedData = JSON.parse(localData);
-                        if (parsedData.stats) {
-                           stats = parsedData.stats;
-                           console.log("Статистика загружена из localStorage.");
-                        }
-                    } catch {
-                        console.error("Ошибка парсинга локальных данных.");
-                    }
-                }
-            }
- 
-async function validateSignature(params) {
-    const sign = params.get('sign');
-    const checkParams = new URLSearchParams();
-    
-    params.forEach((value, key) => {
-        if (key !== 'sign') checkParams.set(key, value);
-    });
-
-    const isValid = await vkBridge.send('VKWebAppVerifyMessage', {
-        message: checkParams.toString(),
-        signature: sign
-    });
-
-    if (!isValid) throw new Error('Invalid signature');
-}
-
-// Показ баннера рекламы
-function showBannerAd() {
-    vkBridge.send("VKWebAppShowBannerAd")
-        .then(response => {
-            console.log('Баннерная реклама показана:', response);
-        })
-        .catch(error => {
-            console.error('Ошибка при показе баннерной рекламы:', error);
-        });
-}
-
-// Скрытие баннера рекламы
-function hideBannerAd() {
-    vkBridge.send("VKWebAppHideBannerAd")
-        .then(response => {
-            console.log('Баннерная реклама скрыта:', response);
-        })
-        .catch(error => {
-            console.error('Ошибка при скрытии баннерной рекламы:', error);
-        });
-}
-
-// Подписка на события
-vkBridge.subscribe((e) => {
-    if (e.detail.type === 'VKWebAppBannerAdUpdated') {
-        console.log('Баннерная реклама обновлена:', e);
-    } else if (e.detail.type === 'VKWebAppBannerAdClosedByUser') {
-        console.log('Пользователь закрыл рекламу:', e);
-    }
-});
-
-function checkAndShowAd() {
-    vkBridge.send('VKWebAppCheckNativeAds')
-    .then(data => {
-        if (data.available) {
-            // Если рекламные материалы доступны, показываем их
-            vkBridge.send('VKWebAppShowNativeAds')
-            .then(() => {
-                // Успешное отображение рекламы
-            })
-            .catch(error => {
-                console.error('Ошибка при показе рекламы:', error);
-            });
-        } else {
-            console.log('Рекламные материалы не доступны.');
-        }
-    })
-    .catch(error => {
-        console.error('Ошибка при проверке наличия рекламы:', error);
-    });
-}
-
-
-
             // === Event Listeners ===
             document.getElementById('board-size-selector').addEventListener('click', (e) => {
-                if (e.target.classList.contains('btn')) {
+                if (e.target.tagName === 'BUTTON') {
                     handleSelector(e.target, '#board-size-selector');
                     boardSize = parseInt(e.target.dataset.size);
                 }
             });
-
             document.getElementById('game-mode-selector').addEventListener('click', (e) => {
-                if (e.target.classList.contains('btn')) {
+                if (e.target.tagName === 'BUTTON') {
                     handleSelector(e.target, '#game-mode-selector');
                     gameMode = e.target.dataset.mode;
                 }
             });
-
             document.getElementById('start-game-btn').addEventListener('click', startGame);
             pauseBtn.addEventListener('click', togglePause);
-            
             document.getElementById('resume-btn').addEventListener('click', togglePause);
-            document.getElementById('restart-pause-btn').addEventListener('click', () => {
-                togglePause();
-                startGame();
-            });
-            document.getElementById('menu-pause-btn').addEventListener('click', () => {
-                togglePause();
-                showMainMenu();
-            });
-            document.getElementById('restart-game-over-btn').addEventListener('click', () => {
-                hideOverlay(gameOverOverlay);
-                startGame();
-            });
-            document.getElementById('menu-game-over-btn').addEventListener('click', () => {
-                hideOverlay(gameOverOverlay);
-                showMainMenu();
-            });
-
+            document.getElementById('restart-pause-btn').addEventListener('click', () => { togglePause(); startGame(); });
+            document.getElementById('menu-pause-btn').addEventListener('click', () => { togglePause(); showMainMenu(); });
+            document.getElementById('restart-game-over-btn').addEventListener('click', () => { hideOverlay(gameOverOverlay); startGame(); });
+            document.getElementById('menu-game-over-btn').addEventListener('click', () => { hideOverlay(gameOverOverlay); showMainMenu(); });
 
             // === Core Game Functions ===
             function handleSelector(target, parentSelector) {
-                document.querySelectorAll(`${parentSelector} .btn`).forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll(`${parentSelector} button`).forEach(btn => btn.classList.remove('active'));
                 target.classList.add('active');
             }
-
+            function getWinLength() {
+                return boardSize === 3 ? 3 : 4;
+            }
             function startGame() {
-                isGameOver = false;
-                currentPlayer = 'X';
-                
+                isGameOver = false; currentPlayer = 'X';
                 boardState = Array(boardSize).fill(null).map(() => Array(boardSize).fill(null));
                 boardElement.innerHTML = '';
                 boardElement.style.setProperty('--board-size', boardSize);
-                
                 for (let i = 0; i < boardSize; i++) {
                     for (let j = 0; j < boardSize; j++) {
                         const cell = document.createElement('div');
                         cell.classList.add('cell');
-                        cell.dataset.row = i;
-                        cell.dataset.col = j;
+                        cell.dataset.row = i; cell.dataset.col = j;
                         cell.addEventListener('click', handleCellClick);
                         boardElement.appendChild(cell);
                     }
                 }
-
                 statusText.textContent = `Ход ${currentPlayer}`;
-                mainMenu.classList.add('hidden');
-                gameScreen.classList.remove('hidden');
-                
+                mainMenu.classList.add('hidden'); gameScreen.classList.remove('hidden');
                 if (gameMode === 'pvc' && currentPlayer !== humanPlayer) {
                     setTimeout(aiMove, 500);
                 }
-
-                showBannerAd();
             }
-
             function handleCellClick(e) {
                 if (isGameOver || isPaused) return;
                 const cell = e.target;
-                const row = cell.dataset.row;
-                const col = cell.dataset.col;
-
-                if (boardState[row][col] || (gameMode === 'pvc' && currentPlayer === aiPlayer)) {
-                    return;
-                }
-
+                const row = cell.dataset.row; const col = cell.dataset.col;
+                if (boardState[row][col] || (gameMode === 'pvc' && currentPlayer === aiPlayer)) return;
                 makeMove(row, col, currentPlayer);
-
                 if (checkWin(currentPlayer)) {
                     endGame(false);
                 } else if (isBoardFull()) {
@@ -637,153 +336,117 @@ function checkAndShowAd() {
                     }
                 }
             }
-
             function makeMove(row, col, player) {
                 boardState[row][col] = player;
                 const cell = document.querySelector(`[data-row='${row}'][data-col='${col}']`);
-                cell.textContent = player;
-                cell.classList.add(player.toLowerCase());
+                cell.textContent = player; cell.classList.add(player.toLowerCase());
             }
-
             function switchPlayer() {
                 currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
                 statusText.textContent = `Ход ${currentPlayer}`;
             }
-
             function checkWin(player) {
+                const winLength = getWinLength();
+                // Rows and Columns
                 for (let i = 0; i < boardSize; i++) {
-                    if (boardState[i].every(cell => cell === player)) return true;
-                    if (boardState.map(row => row[i]).every(cell => cell === player)) return true;
+                    for (let j = 0; j <= boardSize - winLength; j++) {
+                        let rowWin = true, colWin = true;
+                        for (let k = 0; k < winLength; k++) {
+                            if (boardState[i][j + k] !== player) rowWin = false;
+                            if (boardState[j + k][i] !== player) colWin = false;
+                        }
+                        if (rowWin || colWin) return true;
+                    }
                 }
-                if (boardState.map((row, idx) => row[idx]).every(cell => cell === player)) return true;
-                if (boardState.map((row, idx) => row[boardSize - 1 - idx]).every(cell => cell === player)) return true;
+                // Diagonals
+                for (let i = 0; i <= boardSize - winLength; i++) {
+                    for (let j = 0; j <= boardSize - winLength; j++) {
+                        let diag1Win = true, diag2Win = true;
+                        for (let k = 0; k < winLength; k++) {
+                            if (boardState[i + k][j + k] !== player) diag1Win = false;
+                            if (boardState[i + k][j + winLength - 1 - k] !== player) diag2Win = false;
+                        }
+                        if (diag1Win || diag2Win) return true;
+                    }
+                }
                 return false;
             }
-
             function isBoardFull() {
                 return boardState.flat().every(cell => cell !== null);
             }
-
             async function endGame(isDraw) {
                 isGameOver = true;
                 const message = isDraw ? "Ничья!" : `Победил ${currentPlayer}!`;
                 document.getElementById('game-over-message').textContent = message;
                 showOverlay(gameOverOverlay);
-
                 if (gameMode === 'pvc') {
                     if (isDraw) stats.ties++;
                     else if (currentPlayer === humanPlayer) stats.wins++;
                     else stats.losses++;
                 }
-                
                 stats.gamesPlayedSinceAd = (stats.gamesPlayedSinceAd || 0) + 1;
-                await saveStats(); // Сохраняем статистику после каждой игры
+                await saveStats();
                 updateStatsDisplay();
-                
-                // Показ межстраничной рекламы после каждой 3-й игры
                 if (stats.gamesPlayedSinceAd >= 3) {
                     try {
                         const adResult = await vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' });
                         if(adResult.result) {
-                             stats.gamesPlayedSinceAd = 0;
-                             await saveStats(); // Сбрасываем счетчик и сохраняем снова
+                            stats.gamesPlayedSinceAd = 0;
+                            await saveStats();
                         }
-                    } catch (error) {
-                        console.error('Ошибка показа межстраничной рекламы:', error);
-                    }
+                    } catch (error) { console.error('Interstitial Ad Error:', error); }
                 }
             }
-            
-            function togglePause() {
-                isPaused = !isPaused;
-                isPaused ? showOverlay(pauseOverlay) : hideOverlay(pauseOverlay);
-            }
-
-            function showOverlay(overlay) {
-                overlay.classList.add('active');
-            }
-
-            function hideOverlay(overlay) {
-                overlay.classList.remove('active');
-            }
-            
+            function togglePause() { isPaused = !isPaused; isPaused ? showOverlay(pauseOverlay) : hideOverlay(pauseOverlay); }
+            function showOverlay(overlay) { overlay.classList.add('active'); }
+            function hideOverlay(overlay) { overlay.classList.remove('active'); }
             function showMainMenu() {
-                gameScreen.classList.add('hidden');
-                mainMenu.classList.remove('hidden');
+                gameScreen.classList.add('hidden'); mainMenu.classList.remove('hidden');
                 updateStatsDisplay();
-                showBannerAd();
             }
-            
             function updateStatsDisplay() {
-                if (stats) {
-                    statsDisplay.textContent = `Статистика (VS ИИ): Побед: ${stats.wins} | Поражений: ${stats.losses} | Ничьи: ${stats.ties}`;
-                }
+                if(stats) statsDisplay.textContent = `Статистика (VS ИИ): Побед: ${stats.wins} | Поражений: ${stats.losses} | Ничьи: ${stats.ties}`;
             }
 
-
-            // === AI Logic (Minimax) ===
-            function aiMove() {
-                if (isGameOver) return;
-                statusText.textContent = `Думает ${aiPlayer}...`;
-                
-                requestAnimationFrame(() => {
-                    const bestMove = findBestMove();
-                    if (bestMove) {
-                        makeMove(bestMove.row, bestMove.col, aiPlayer);
-                        if (checkWin(aiPlayer)) {
-                            endGame(false);
-                        } else if (isBoardFull()) {
-                            endGame(true);
-                        } else {
-                            switchPlayer();
-                        }
-                    }
-                });
+            // === AI LOGIC ===
+            function getMovesMade() {
+                return boardState.flat().filter(Boolean).length;
             }
 
             function findBestMove() {
+                // Special case for 3x3: first move is random
+                if (boardSize === 3 && getMovesMade() <= 1) {
+                    const emptyCells = [];
+                    for(let i=0; i<boardSize; i++) for(let j=0; j<boardSize; j++) if(!boardState[i][j]) emptyCells.push({row: i, col: j});
+                    return emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                }
+                
                 let bestVal = -Infinity;
-                let bestMoves = []; // Собираем все лучшие ходы, а не только один
-
+                let bestMoves = [];
                 for (let i = 0; i < boardSize; i++) {
                     for (let j = 0; j < boardSize; j++) {
-                        // Если ячейка пуста
                         if (boardState[i][j] === null) {
-                            // Делаем ход
                             boardState[i][j] = aiPlayer;
-                            // Оцениваем его с помощью минимакса
                             let moveVal = minimax(0, false, -Infinity, Infinity);
-                            // Отменяем ход
                             boardState[i][j] = null;
-
-                            // Сравниваем оценку с лучшей найденной
                             if (moveVal > bestVal) {
-                                // Если нашли ход лучше, чем все предыдущие
                                 bestVal = moveVal;
-                                bestMoves = [{ row: i, col: j }]; // Начинаем новый список лучших ходов
+                                bestMoves = [{ row: i, col: j }];
                             } else if (moveVal === bestVal) {
-                                // Если ход так же хорош, как и лучший уже найденный
-                                bestMoves.push({ row: i, col: j }); // Добавляем его в список
+                                bestMoves.push({ row: i, col: j });
                             }
                         }
                     }
                 }
-                
-                // Если есть хотя бы один хороший ход
-                if (bestMoves.length > 0) {
-                    // Выбираем случайный ход из списка лучших
-                    const randomIndex = Math.floor(Math.random() * bestMoves.length);
-                    return bestMoves[randomIndex];
-                }
-
-                return null; // На всякий случай, если ходов не осталось
+                return bestMoves.length > 0 ? bestMoves[Math.floor(Math.random() * bestMoves.length)] : null;
             }
-            
+
             function minimax(depth, isMaximizing, alpha, beta) {
-                let score = evaluate();
-                if (score === 10) return score - depth;
-                if (score === -10) return score + depth;
-                if (isBoardFull() || depth > getSearchDepth()) return 0;
+                if (checkWin(aiPlayer)) return 100000 - depth;
+                if (checkWin(humanPlayer)) return -100000 + depth;
+                if (isBoardFull() || depth >= getSearchDepth()) {
+                    return evaluateBoard();
+                }
 
                 if (isMaximizing) {
                     let best = -Infinity;
@@ -794,10 +457,9 @@ function checkAndShowAd() {
                                 best = Math.max(best, minimax(depth + 1, !isMaximizing, alpha, beta));
                                 boardState[i][j] = null;
                                 alpha = Math.max(alpha, best);
-                                if (beta <= alpha) break;
+                                if (beta <= alpha) return best;
                             }
                         }
-                         if (beta <= alpha) break;
                     }
                     return best;
                 } else {
@@ -809,10 +471,9 @@ function checkAndShowAd() {
                                 best = Math.min(best, minimax(depth + 1, !isMaximizing, alpha, beta));
                                 boardState[i][j] = null;
                                 beta = Math.min(beta, best);
-                                if (beta <= alpha) break;
+                                if (beta <= alpha) return best;
                             }
                         }
-                         if (beta <= alpha) break;
                     }
                     return best;
                 }
@@ -821,15 +482,67 @@ function checkAndShowAd() {
             function getSearchDepth() {
                 if (boardSize === 3) return 9;
                 if (boardSize === 4) return 4;
-                return 3;
+                return 3; // Для 5х5 глубина 3, но с умной оценкой
+            }
+            
+            function evaluateBoard() {
+                if (boardSize === 3) return 0; // Для 3х3 достаточно простой оценки победы/поражения
+                let score = 0;
+                const lines = getAllLines();
+                lines.forEach(line => {
+                    score += evaluateLine(line);
+                });
+                return score;
             }
 
-            function evaluate() {
-                if (checkWin(aiPlayer)) return 10;
-                if (checkWin(humanPlayer)) return -10;
+            function evaluateLine(line) {
+                let aiCount = 0, humanCount = 0;
+                for(const cell of line) {
+                    if(cell === aiPlayer) aiCount++;
+                    else if(cell === humanPlayer) humanCount++;
+                }
+
+                if(aiCount > 0 && humanCount > 0) return 0; // Линия заблокирована
+
+                const winLength = getWinLength();
+                if(aiCount === winLength - 1) return 5000; // Почти победа ИИ
+                if(humanCount === winLength - 1) return -10000; // Почти победа человека (блокировать важнее)
+                if(aiCount === winLength - 2) return 100; // Хорошая позиция ИИ
+                if(humanCount === winLength - 2) return -500; // Угроза от человека
+                if(aiCount > 0) return 1;
+                if(humanCount > 0) return -5;
+                
                 return 0;
             }
+            
+            function getAllLines() {
+                const lines = [];
+                // Rows and Columns
+                for(let i=0; i<boardSize; i++){
+                    let row = [], col = [];
+                    for(let j=0; j<boardSize; j++) {
+                        row.push(boardState[i][j]);
+                        col.push(boardState[j][i]);
+                    }
+                    lines.push(row, col);
+                }
+                // Diagonals
+                for (let k = 0; k <= 2 * (boardSize - 1); k++) {
+                    let d1 = [], d2 = [];
+                    for (let y = 0; y < boardSize; y++) {
+                        let x = k - y;
+                        if (x >= 0 && x < boardSize) d1.push(boardState[y][x]);
+                        x = k - (boardSize - 1 - y);
+                        if (x >= 0 && x < boardSize) d2.push(boardState[y][x]);
+                    }
+                    if(d1.length >= getWinLength()) lines.push(d1);
+                    if(d2.length >= getWinLength()) lines.push(d2);
+                }
+                return lines;
+            }
 
+            // === Initial Load ===
+            init();
         });
     </script>
 
