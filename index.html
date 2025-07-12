@@ -22,8 +22,19 @@
             --board-size: 3;
             --cell-gap: 10px;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { height: 100%; width: 100%; overflow: hidden; }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+
         body {
             font-family: 'Montserrat', sans-serif;
             background-color: var(--bg-color);
@@ -32,6 +43,7 @@
             justify-content: center;
             align-items: center;
         }
+
         .container {
             width: 100%;
             max-width: 500px;
@@ -41,16 +53,22 @@
             align-items: center;
             justify-content: center;
         }
-        .main-menu, .game-screen { width: 100%; }
+
+        /* --- Main Menu --- */
         .main-menu {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 20px;
             text-align: center;
+            width: 100%;
             transition: opacity var(--transition-speed), transform var(--transition-speed);
         }
-        .main-menu.hidden, .game-screen.hidden { display: none; }
+
+        .main-menu.hidden, .game-screen.hidden {
+            display: none;
+        }
+
         .title {
             font-size: 2.5rem;
             font-weight: 700;
@@ -60,6 +78,7 @@
             -webkit-text-fill-color: transparent;
             margin-bottom: 20px;
         }
+
         .menu-section {
             background-color: var(--primary-color);
             padding: 20px;
@@ -69,6 +88,7 @@
             flex-direction: column;
             gap: 15px;
         }
+        
         .menu-section h3 {
             font-size: 1.2rem;
             border-bottom: 2px solid var(--secondary-color);
@@ -76,95 +96,184 @@
             margin-bottom: 5px;
             font-weight: 600;
         }
-        .btn-group { display: flex; gap: 10px; width: 100%; }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
         .btn {
-            flex-grow: 1; padding: 15px 10px; font-size: 1rem; font-weight: 600;
-            background-color: var(--secondary-color); color: var(--text-color);
-            border: none; border-radius: 8px; cursor: pointer;
+            flex-grow: 1;
+            padding: 15px 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
             transition: background-color var(--transition-speed), transform var(--transition-speed);
             border: 2px solid transparent;
         }
-        .btn:hover { transform: translateY(-3px); background-color: #4a4a4a; }
-        .btn.active { background-color: var(--accent-color); color: var(--bg-color); border-color: var(--accent-color); }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            background-color: #4a4a4a;
+        }
+
+        .btn.active {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+            border-color: var(--accent-color);
+        }
+
         .start-btn {
-            padding: 18px; font-size: 1.2rem; font-weight: 700;
+            padding: 18px;
+            font-size: 1.2rem;
+            font-weight: 700;
             background: linear-gradient(90deg, var(--x-color), var(--o-color));
-            color: var(--text-color); border: none; border-radius: 8px;
-            cursor: pointer; transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+            color: var(--text-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform var(--transition-speed), box-shadow var(--transition-speed);
             margin-top: 10px;
         }
+
         .start-btn:hover {
             transform: scale(1.05);
             box-shadow: 0 0 20px rgba(0, 217, 255, 0.5), 0 0 20px rgba(255, 0, 127, 0.5);
         }
-        #stats-display { font-size: 0.9rem; color: #aaa; margin-top: 10px; }
-        .game-screen { display: flex; flex-direction: column; align-items: center; gap: 20px; }
-        .game-header { width: 100%; display: flex; justify-content: space-between; align-items: center; }
-        #status-text { font-size: 1.5rem; font-weight: 600; }
-        #pause-btn { background: none; border: none; color: var(--text-color); font-size: 1.8rem; cursor: pointer; transition: color var(--transition-speed); }
-        #pause-btn:hover { color: var(--accent-color); }
+
+        #stats-display {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-top: 10px;
+        }
         
-        /* НОВЫЙ БЛОК для позиционирования доски и линии */
-        .board-container {
-            position: relative;
+        /* --- Game Screen --- */
+        .game-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
             width: 100%;
+            max-width: 500px;
+        }
+        
+        .game-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #status-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        #pause-btn {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: color var(--transition-speed);
+        }
+        #pause-btn:hover {
+            color: var(--accent-color);
         }
 
         #board {
-            display: grid; grid-template-columns: repeat(var(--board-size), 1fr);
-            gap: var(--cell-gap); width: 100%; background-color: var(--primary-color);
-            padding: var(--cell-gap); border-radius: var(--border-radius);
+            display: grid;
+            grid-template-columns: repeat(var(--board-size), 1fr);
+            gap: var(--cell-gap);
+            width: 100%;
+            background-color: var(--primary-color);
+            padding: var(--cell-gap);
+            border-radius: var(--border-radius);
+        }
+
+        .cell {
+            aspect-ratio: 1 / 1;
+            background-color: var(--secondary-color);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color var(--transition-speed);
         }
         
-        /* НОВЫЙ БЛОК для SVG линии */
-        #win-line-svg {
-            position: absolute;
+        .cell:not(.x):not(.o):hover {
+            background-color: #4a4a4a;
+        }
+
+        .cell.x, .cell.o {
+            cursor: not-allowed;
+            font-size: min(10vw, calc(300px / var(--board-size) * 0.7));
+            font-weight: 700;
+            line-height: 1;
+        }
+        
+        .cell.x { color: var(--x-color); }
+        .cell.o { color: var(--o-color); }
+        
+        /* --- Overlay Styles --- */
+        .overlay {
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            background-color: rgba(26, 26, 26, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
             pointer-events: none;
-            z-index: 10;
-            overflow: visible;
-        }
-
-        #win-line {
-            stroke-width: 8px;
-            stroke-linecap: round;
-            transition: stroke-dashoffset 0.5s ease-in-out;
-            display: none; /* Скрыта по умолчанию */
-        }
-
-        .cell {
-            aspect-ratio: 1 / 1; background-color: var(--secondary-color);
-            border-radius: 8px; display: flex; justify-content: center;
-            align-items: center; cursor: pointer; transition: background-color var(--transition-speed);
-        }
-        .cell:not(.x):not(.o):hover { background-color: #4a4a4a; }
-        .cell.x, .cell.o {
-            cursor: not-allowed; font-size: min(10vw, calc(300px / var(--board-size) * 0.7));
-            font-weight: 700; line-height: 1;
-        }
-        .cell.x { color: var(--x-color); }
-        .cell.o { color: var(--o-color); }
-        .overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(26, 26, 26, 0.8); backdrop-filter: blur(5px);
-            display: flex; justify-content: center; align-items: center;
-            opacity: 0; pointer-events: none; transition: opacity var(--transition-speed);
+            transition: opacity var(--transition-speed);
             z-index: 1000;
         }
-        .overlay.active { opacity: 1; pointer-events: auto; }
-        .overlay-content {
-            background-color: var(--primary-color); padding: 40px; border-radius: var(--border-radius);
-            text-align: center; display: flex; flex-direction: column; gap: 20px;
-            transform: scale(0.9); transition: transform var(--transition-speed);
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: auto;
         }
-        .overlay.active .overlay-content { transform: scale(1); }
-        .overlay-content h2 { font-size: 2rem; margin-bottom: 10px; }
-        .overlay-content .btn-group { flex-direction: column; }
+        
+        .overlay-content {
+            background-color: var(--primary-color);
+            padding: 40px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transform: scale(0.9);
+            transition: transform var(--transition-speed);
+        }
+        
+        .overlay.active .overlay-content {
+            transform: scale(1);
+        }
+
+        .overlay-content h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .overlay-content .btn-group {
+            flex-direction: column;
+        }
+
+        /* Responsive Design */
         @media (max-width: 500px) {
-            :root { --cell-gap: 5px; }
+            :root {
+                --cell-gap: 5px;
+            }
             .title { font-size: 2rem; }
             #status-text { font-size: 1.2rem; }
             .btn { padding: 12px 8px; font-size: 0.9rem;}
@@ -172,6 +281,7 @@
             .overlay-content { padding: 30px; width: calc(100% - 40px); }
             .overlay-content h2 { font-size: 1.8rem; }
         }
+
     </style>
 </head>
 <body>
@@ -182,9 +292,9 @@
             <div class="menu-section">
                 <h3>Размер Поля</h3>
                 <div class="btn-group" id="board-size-selector">
-                    <button class="btn active" data-size="3">3x3 (3 в ряд)</button>
-                    <button class="btn" data-size="4">4x4 (4 в ряд)</button>
-                    <button class="btn" data-size="5">5x5 (4 в ряд)</button>
+                    <button class="btn active" data-size="3">3x3</button>
+                    <button class="btn" data-size="4">4x4</button>
+                    <button class="btn" data-size="5">5x5</button>
                 </div>
             </div>
             <div class="menu-section">
@@ -197,19 +307,16 @@
             <button id="start-game-btn" class="start-btn">Начать Игру</button>
             <div id="stats-display">Загрузка статистики...</div>
         </div>
+
         <div id="game-screen" class="game-screen hidden">
             <div class="game-header">
                 <div id="status-text">Ход X</div>
                 <button id="pause-btn">❚❚</button>
             </div>
-            <div class="board-container">
-                <div id="board"></div>
-                <svg id="win-line-svg">
-                    <line id="win-line" x1="0" y1="0" x2="0" y2="0" />
-                </svg>
-            </div>
+            <div id="board"></div>
         </div>
     </div>
+
     <div id="pause-overlay" class="overlay">
         <div class="overlay-content">
             <h2>Пауза</h2>
@@ -220,6 +327,7 @@
             </div>
         </div>
     </div>
+
     <div id="game-over-overlay" class="overlay">
         <div class="overlay-content">
             <h2 id="game-over-message"></h2>
@@ -230,128 +338,213 @@
         </div>
     </div>
 
+
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', () => {
             // === DOM Elements and State ===
-            const mainMenu = document.getElementById('main-menu'), gameScreen = document.getElementById('game-screen'),
-                  boardElement = document.getElementById('board'), statusText = document.getElementById('status-text'),
-                  pauseBtn = document.getElementById('pause-btn'), pauseOverlay = document.getElementById('pause-overlay'),
-                  gameOverOverlay = document.getElementById('game-over-overlay'), statsDisplay = document.getElementById('stats-display'),
-                  winLine = document.getElementById('win-line');
+            const mainMenu = document.getElementById('main-menu');
+            const gameScreen = document.getElementById('game-screen');
+            const boardElement = document.getElementById('board');
+            const statusText = document.getElementById('status-text');
+            const pauseBtn = document.getElementById('pause-btn');
+            const pauseOverlay = document.getElementById('pause-overlay');
+            const gameOverOverlay = document.getElementById('game-over-overlay');
+            const statsDisplay = document.getElementById('stats-display');
 
-            let boardSize = 3, gameMode = 'pvc', currentPlayer = 'X', boardState = [],
-                isGameOver = false, isPaused = false, humanPlayer = 'X', aiPlayer = 'O',
-                stats = { wins: 0, losses: 0, ties: 0, gamesPlayedSinceAd: 0, whoStartsNext: 'X' };
+            let boardSize = 3;
+            let gameMode = 'pvc';
+            let currentPlayer = 'X';
+            let boardState = [];
+            let isGameOver = false;
+            let isPaused = false;
+            let humanPlayer = 'X';
+            let aiPlayer = 'O';
+            let stats = { wins: 0, losses: 0, ties: 0, gamesPlayedSinceAd: 0 };
 
-            // === VK Integration (from user file) ===
-            const APP_ID = 53865837; // ❗❗❗ ВАЖНО: ВСТАВЬТЕ ID ВАШЕГО ПРИЛОЖЕНИЯ ЗДЕСЬ
-            const STATS_VK_KEY_PREFIX = 'ticTacToeStats_v4'; // Обновлен ключ во избежание конфликтов
-            const STATS_LOCAL_KEY = 'ticTacToeLocalSave_v4';
-            let vkUser = null, vkUserId = null;
+            // === VK Integration ===
+            const APP_ID = 0; // ❗❗❗ ВАЖНО: ВСТАВЬТЕ ID ВАШЕГО ПРИЛОЖЕНИЯ ЗДЕСЬ
+            const STATS_VK_KEY_PREFIX = 'ticTacToeStats';
+            const STATS_LOCAL_KEY = 'ticTacToeLocalSave';
 
+            let vkUser = null;
+            let vkUserId = null;
+            
             async function initVK() {
-                if (APP_ID === 0) console.warn("Необходимо указать ID приложения в переменной APP_ID");
+                if (APP_ID === 0) {
+                    console.warn("Необходимо указать ID приложения в переменной APP_ID");
+                    statsDisplay.textContent = "Ошибка: не указан ID приложения VK.";
+                    loadLocalStats();
+                    updateStatsDisplay();
+                    return;
+                }
+                
                 try {
                     await vkBridge.send('VKWebAppInit', {});
+                    
                     const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
                     vkUser = userInfo;
                     vkUserId = userInfo.id;
-                    await vkBridge.send('VKWebAppGetAuthToken', { app_id: APP_ID, scope: 'storage' });
+                    
+                    await vkBridge.send('VKWebAppGetAuthToken', {
+                        app_id: APP_ID,
+                        scope: 'storage'
+                    });
+                    
+                    // Загружаем статистику пользователя
                     await loadStats();
-                    console.log('VK Bridge инициализирован');
-                } catch (error) {
-                    console.error('Ошибка инициализации VK Bridge, используется localStorage:', error);
-                    loadLocalStats();
-                }
-                updateStatsDisplay();
-                vkBridge.send('VKWebAppShowBannerAd', { banner_location: 'bottom' }).catch(e => {});
-            }
+                    console.log('VK Bridge инициализирован для пользователя ' + vkUserId);
 
+                    // Показываем баннерную рекламу
+                    vkBridge.send('VKWebAppShowBannerAd', {
+                        banner_location: 'bottom'
+                    }).catch(error => console.error("Ошибка показа баннера:", error));
+
+                } catch (error) {
+                    console.error('Ошибка инициализации VK Bridge:', error);
+                    // Fallback на локальное хранилище
+                    loadLocalStats();
+                    updateStatsDisplay();
+                }
+            }
+            
             async function saveStats() {
-                const dataToSave = { stats: stats, lastUpdated: Date.now(), syncVersion: 4 };
+                const dataToSave = {
+                    stats: stats,
+                    lastUpdated: Date.now(),
+                    syncVersion: 1
+                };
                 const dataString = JSON.stringify(dataToSave);
+                
+                // Всегда сохраняем локально как резервную копию
                 localStorage.setItem(STATS_LOCAL_KEY, dataString);
+
+                // Пытаемся сохранить в облако VK
                 if (vkUserId) {
                     try {
-                        await vkBridge.send('VKWebAppStorageSet', { key: `${STATS_VK_KEY_PREFIX}_${vkUserId}`, value: dataString });
-                    } catch (err) { console.error('Ошибка сохранения в VK Storage:', err); }
+                        await vkBridge.send('VKWebAppStorageSet', {
+                            key: `${STATS_VK_KEY_PREFIX}_${vkUserId}`,
+                            value: dataString,
+                        });
+                        console.log("Статистика сохранена в VK Storage.");
+                    } catch (err) {
+                        console.error('Ошибка сохранения в VK Storage:', err);
+                    }
                 }
             }
             
             async function loadStats() {
-                if (!vkUserId) { loadLocalStats(); return; }
+                if (!vkUserId) {
+                    loadLocalStats();
+                    updateStatsDisplay();
+                    return;
+                }
+
                 try {
-                    const response = await vkBridge.send('VKWebAppStorageGet', { keys: [`${STATS_VK_KEY_PREFIX}_${vkUserId}`] });
+                    const response = await vkBridge.send('VKWebAppStorageGet', {
+                        keys: [`${STATS_VK_KEY_PREFIX}_${vkUserId}`]
+                    });
+                    
                     if (response.keys[0]?.value) {
                         const cloudData = JSON.parse(response.keys[0].value);
-                        if (cloudData.syncVersion === 4 && cloudData.stats) {
-                            stats = cloudData.stats; return;
+                        if (cloudData.syncVersion === 1 && cloudData.stats) {
+                            stats = cloudData.stats;
+                            console.log("Статистика загружена из VK Storage.");
+                            updateStatsDisplay();
+                            return;
                         }
                     }
+                    // Если в облаке нет валидных данных, пробуем локальные
                     loadLocalStats();
-                } catch (err) { loadLocalStats(); }
+                    updateStatsDisplay();
+                } catch (err) {
+                    console.error('Ошибка загрузки из VK Storage:', err);
+                    loadLocalStats();
+                    updateStatsDisplay();
+                }
             }
-
+            
             function loadLocalStats() {
                 const localData = localStorage.getItem(STATS_LOCAL_KEY);
                 if (localData) {
                     try {
                         const parsedData = JSON.parse(localData);
-                        if (parsedData.stats) stats = parsedData.stats;
-                    } catch { console.error("Ошибка парсинга локальных данных."); }
+                        if (parsedData.stats) {
+                           stats = parsedData.stats;
+                           console.log("Статистика загружена из localStorage.");
+                        }
+                    } catch {
+                        console.error("Ошибка парсинга локальных данных.");
+                    }
                 }
             }
 
             // === Event Listeners ===
             document.getElementById('board-size-selector').addEventListener('click', (e) => {
-                if (e.target.tagName === 'BUTTON') {
+                if (e.target.classList.contains('btn')) {
                     handleSelector(e.target, '#board-size-selector');
                     boardSize = parseInt(e.target.dataset.size);
                 }
             });
+
             document.getElementById('game-mode-selector').addEventListener('click', (e) => {
-                if (e.target.tagName === 'BUTTON') {
+                if (e.target.classList.contains('btn')) {
                     handleSelector(e.target, '#game-mode-selector');
                     gameMode = e.target.dataset.mode;
                 }
             });
+
             document.getElementById('start-game-btn').addEventListener('click', startGame);
             pauseBtn.addEventListener('click', togglePause);
+            
             document.getElementById('resume-btn').addEventListener('click', togglePause);
-            document.getElementById('restart-pause-btn').addEventListener('click', () => { togglePause(); startGame(); });
-            document.getElementById('menu-pause-btn').addEventListener('click', () => { togglePause(); showMainMenu(); });
-            document.getElementById('restart-game-over-btn').addEventListener('click', () => { hideOverlay(gameOverOverlay); startGame(); });
-            document.getElementById('menu-game-over-btn').addEventListener('click', () => { hideOverlay(gameOverOverlay); showMainMenu(); });
+            document.getElementById('restart-pause-btn').addEventListener('click', () => {
+                togglePause();
+                startGame();
+            });
+            document.getElementById('menu-pause-btn').addEventListener('click', () => {
+                togglePause();
+                showMainMenu();
+            });
+            document.getElementById('restart-game-over-btn').addEventListener('click', () => {
+                hideOverlay(gameOverOverlay);
+                startGame();
+            });
+            document.getElementById('menu-game-over-btn').addEventListener('click', () => {
+                hideOverlay(gameOverOverlay);
+                showMainMenu();
+            });
+
 
             // === Core Game Functions ===
             function handleSelector(target, parentSelector) {
-                document.querySelectorAll(`${parentSelector} button`).forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll(`${parentSelector} .btn`).forEach(btn => btn.classList.remove('active'));
                 target.classList.add('active');
             }
-            function getWinLength() { return boardSize === 3 ? 3 : 4; }
-            
+
             function startGame() {
                 isGameOver = false;
-                // ИЗМЕНЕНО: Установка первого игрока на основе сохраненной очерёдности
-                currentPlayer = gameMode === 'pvc' ? stats.whoStartsNext || 'X' : 'X';
+                currentPlayer = 'X';
                 
                 boardState = Array(boardSize).fill(null).map(() => Array(boardSize).fill(null));
                 boardElement.innerHTML = '';
                 boardElement.style.setProperty('--board-size', boardSize);
-                winLine.style.display = 'none';
-
+                
                 for (let i = 0; i < boardSize; i++) {
                     for (let j = 0; j < boardSize; j++) {
                         const cell = document.createElement('div');
                         cell.classList.add('cell');
-                        cell.dataset.row = i; cell.dataset.col = j;
+                        cell.dataset.row = i;
+                        cell.dataset.col = j;
                         cell.addEventListener('click', handleCellClick);
                         boardElement.appendChild(cell);
                     }
                 }
+
                 statusText.textContent = `Ход ${currentPlayer}`;
-                mainMenu.classList.add('hidden'); gameScreen.classList.remove('hidden');
-                if (gameMode === 'pvc' && currentPlayer === aiPlayer) {
+                mainMenu.classList.add('hidden');
+                gameScreen.classList.remove('hidden');
+                
+                if (gameMode === 'pvc' && currentPlayer !== humanPlayer) {
                     setTimeout(aiMove, 500);
                 }
             }
@@ -359,16 +552,19 @@
             function handleCellClick(e) {
                 if (isGameOver || isPaused) return;
                 const cell = e.target;
-                const row = cell.dataset.row; const col = cell.dataset.col;
-                if (boardState[row][col] || (gameMode === 'pvc' && currentPlayer === aiPlayer)) return;
-                
-                makeMove(row, col, currentPlayer);
-                const winInfo = checkWin(currentPlayer);
+                const row = cell.dataset.row;
+                const col = cell.dataset.col;
 
-                if (winInfo) {
-                    endGame(false, winInfo);
+                if (boardState[row][col] || (gameMode === 'pvc' && currentPlayer === aiPlayer)) {
+                    return;
+                }
+
+                makeMove(row, col, currentPlayer);
+
+                if (checkWin(currentPlayer)) {
+                    endGame(false);
                 } else if (isBoardFull()) {
-                    endGame(true, null);
+                    endGame(true);
                 } else {
                     switchPlayer();
                     if (gameMode === 'pvc' && currentPlayer === aiPlayer) {
@@ -376,130 +572,112 @@
                     }
                 }
             }
+
             function makeMove(row, col, player) {
                 boardState[row][col] = player;
                 const cell = document.querySelector(`[data-row='${row}'][data-col='${col}']`);
-                cell.textContent = player; cell.classList.add(player.toLowerCase());
+                cell.textContent = player;
+                cell.classList.add(player.toLowerCase());
             }
+
             function switchPlayer() {
                 currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
                 statusText.textContent = `Ход ${currentPlayer}`;
             }
-            
-            // ИЗМЕНЕНО: Функция возвращает не просто true, а объект с информацией о победе
+
             function checkWin(player) {
-                const winLength = getWinLength();
-                for (let r = 0; r < boardSize; r++) {
-                    for (let c = 0; c < boardSize; c++) {
-                        if (c <= boardSize - winLength) {
-                            let line = [];
-                            for (let i = 0; i < winLength; i++) line.push({r:r, c:c+i});
-                            if (line.every(p => boardState[p.r][p.c] === player)) return { win: true, cells: line };
-                        }
-                        if (r <= boardSize - winLength) {
-                            let line = [];
-                            for (let i = 0; i < winLength; i++) line.push({r:r+i, c:c});
-                            if (line.every(p => boardState[p.r][p.c] === player)) return { win: true, cells: line };
-                        }
-                        if (r <= boardSize - winLength && c <= boardSize - winLength) {
-                            let line = [];
-                            for (let i = 0; i < winLength; i++) line.push({r:r+i, c:c+i});
-                            if (line.every(p => boardState[p.r][p.c] === player)) return { win: true, cells: line };
-                        }
-                        if (r <= boardSize - winLength && c >= winLength - 1) {
-                            let line = [];
-                            for (let i = 0; i < winLength; i++) line.push({r:r+i, c:c-i});
-                            if (line.every(p => boardState[p.r][p.c] === player)) return { win: true, cells: line };
-                        }
-                    }
+                for (let i = 0; i < boardSize; i++) {
+                    if (boardState[i].every(cell => cell === player)) return true;
+                    if (boardState.map(row => row[i]).every(cell => cell === player)) return true;
                 }
-                return null;
+                if (boardState.map((row, idx) => row[idx]).every(cell => cell === player)) return true;
+                if (boardState.map((row, idx) => row[boardSize - 1 - idx]).every(cell => cell === player)) return true;
+                return false;
             }
 
-            function isBoardFull() { return boardState.flat().every(cell => cell !== null); }
-            
-            // ИЗМЕНЕНО: Функция принимает winInfo и меняет очерёдность хода
-            async function endGame(isDraw, winInfo) {
+            function isBoardFull() {
+                return boardState.flat().every(cell => cell !== null);
+            }
+
+            async function endGame(isDraw) {
                 isGameOver = true;
-                if (winInfo) {
-                    drawWinningLine(winInfo);
-                }
                 const message = isDraw ? "Ничья!" : `Победил ${currentPlayer}!`;
                 document.getElementById('game-over-message').textContent = message;
                 showOverlay(gameOverOverlay);
+
                 if (gameMode === 'pvc') {
                     if (isDraw) stats.ties++;
                     else if (currentPlayer === humanPlayer) stats.wins++;
                     else stats.losses++;
-                    // Меняем игрока, который начнёт следующую партию
-                    stats.whoStartsNext = stats.whoStartsNext === 'X' ? 'O' : 'X';
                 }
+                
                 stats.gamesPlayedSinceAd = (stats.gamesPlayedSinceAd || 0) + 1;
-                await saveStats();
+                await saveStats(); // Сохраняем статистику после каждой игры
                 updateStatsDisplay();
+                
+                // Показ межстраничной рекламы после каждой 3-й игры
                 if (stats.gamesPlayedSinceAd >= 3) {
                     try {
                         const adResult = await vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' });
                         if(adResult.result) {
-                            stats.gamesPlayedSinceAd = 0;
-                            await saveStats();
+                             stats.gamesPlayedSinceAd = 0;
+                             await saveStats(); // Сбрасываем счетчик и сохраняем снова
                         }
-                    } catch (error) { console.error('Interstitial Ad Error:', error); }
+                    } catch (error) {
+                        console.error('Ошибка показа межстраничной рекламы:', error);
+                    }
                 }
             }
             
-            // НОВАЯ ФУНКЦИЯ: Рисует победную линию
-            function drawWinningLine(winInfo) {
-                const startCell = document.querySelector(`[data-row='${winInfo.cells[0].r}'][data-col='${winInfo.cells[0].c}']`);
-                const endCell = document.querySelector(`[data-row='${winInfo.cells[winInfo.cells.length - 1].r}'][data-col='${winInfo.cells[winInfo.cells.length - 1].c}']`);
-                
-                const boardRect = boardElement.getBoundingClientRect();
-                const startRect = startCell.getBoundingClientRect();
-                const endRect = endCell.getBoundingClientRect();
-
-                const x1 = startRect.left + startRect.width / 2 - boardRect.left;
-                const y1 = startRect.top + startRect.height / 2 - boardRect.top;
-                const x2 = endRect.left + endRect.width / 2 - boardRect.left;
-                const y2 = endRect.top + endRect.height / 2 - boardRect.top;
-
-                winLine.setAttribute('x1', x1);
-                winLine.setAttribute('y1', y1);
-                winLine.setAttribute('x2', x2);
-                winLine.setAttribute('y2', y2);
-                winLine.style.stroke = `var(--${currentPlayer.toLowerCase()}-color)`;
-                
-                const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-                winLine.style.strokeDasharray = length;
-                winLine.style.strokeDashoffset = length;
-                winLine.style.display = 'block';
-                
-                setTimeout(() => {
-                    winLine.style.strokeDashoffset = 0;
-                }, 100);
+            function togglePause() {
+                isPaused = !isPaused;
+                isPaused ? showOverlay(pauseOverlay) : hideOverlay(pauseOverlay);
             }
 
-            function togglePause() { isPaused = !isPaused; isPaused ? showOverlay(pauseOverlay) : hideOverlay(pauseOverlay); }
-            function showOverlay(overlay) { overlay.classList.add('active'); }
-            function hideOverlay(overlay) { overlay.classList.remove('active'); }
+            function showOverlay(overlay) {
+                overlay.classList.add('active');
+            }
+
+            function hideOverlay(overlay) {
+                overlay.classList.remove('active');
+            }
+            
             function showMainMenu() {
-                gameScreen.classList.add('hidden'); mainMenu.classList.remove('hidden');
+                gameScreen.classList.add('hidden');
+                mainMenu.classList.remove('hidden');
                 updateStatsDisplay();
             }
+            
             function updateStatsDisplay() {
-                if(stats) statsDisplay.textContent = `Статистика (VS ИИ): Побед: ${stats.wins} | Поражений: ${stats.losses} | Ничьи: ${stats.ties}`;
+                if (stats) {
+                    statsDisplay.textContent = `Статистика (VS ИИ): Побед: ${stats.wins} | Поражений: ${stats.losses} | Ничьи: ${stats.ties}`;
+                }
             }
 
-            // === AI LOGIC (с улучшениями) ===
-            function getMovesMade() { return boardState.flat().filter(Boolean).length; }
-            
+
+            // === AI Logic (Minimax) ===
+            function aiMove() {
+                if (isGameOver) return;
+                statusText.textContent = `Думает ${aiPlayer}...`;
+                
+                requestAnimationFrame(() => {
+                    const bestMove = findBestMove();
+                    if (bestMove) {
+                        makeMove(bestMove.row, bestMove.col, aiPlayer);
+                        if (checkWin(aiPlayer)) {
+                            endGame(false);
+                        } else if (isBoardFull()) {
+                            endGame(true);
+                        } else {
+                            switchPlayer();
+                        }
+                    }
+                });
+            }
+
             function findBestMove() {
-                if (boardSize === 3 && getMovesMade() <= 1) {
-                    const emptyCells = [];
-                    for(let i=0; i<boardSize; i++) for(let j=0; j<boardSize; j++) if(!boardState[i][j]) emptyCells.push({row: i, col: j});
-                    return emptyCells[Math.floor(Math.random() * emptyCells.length)];
-                }
                 let bestVal = -Infinity;
-                let bestMoves = [];
+                let bestMove = null;
                 for (let i = 0; i < boardSize; i++) {
                     for (let j = 0; j < boardSize; j++) {
                         if (boardState[i][j] === null) {
@@ -507,114 +685,71 @@
                             let moveVal = minimax(0, false, -Infinity, Infinity);
                             boardState[i][j] = null;
                             if (moveVal > bestVal) {
+                                bestMove = { row: i, col: j };
                                 bestVal = moveVal;
-                                bestMoves = [{ row: i, col: j }];
-                            } else if (moveVal === bestVal) {
-                                bestMoves.push({ row: i, col: j });
                             }
                         }
                     }
                 }
-                if (bestMoves.length > 0) return bestMoves[Math.floor(Math.random() * bestMoves.length)];
-                return null;
+                return bestMove;
             }
-
-            function aiMove() {
-                if (isGameOver) return;
-                statusText.textContent = `Думает ${aiPlayer}...`;
-                requestAnimationFrame(() => {
-                    const bestMove = findBestMove();
-                    if (bestMove) {
-                        makeMove(bestMove.row, bestMove.col, aiPlayer);
-                        const winInfo = checkWin(aiPlayer);
-                        if (winInfo) { endGame(false, winInfo); } 
-                        else if (isBoardFull()) { endGame(true, null); } 
-                        else { switchPlayer(); }
-                    } else { console.error("AI couldn't find a move."); }
-                });
-            }
-
+            
             function minimax(depth, isMaximizing, alpha, beta) {
-                if (checkWin(aiPlayer)) return 100000 - depth;
-                if (checkWin(humanPlayer)) return -100000 + depth;
-                if (isBoardFull()) return 0;
-                if (depth >= getSearchDepth()) return evaluateBoard();
+                let score = evaluate();
+                if (score === 10) return score - depth;
+                if (score === -10) return score + depth;
+                if (isBoardFull() || depth > getSearchDepth()) return 0;
 
-                let bestVal = isMaximizing ? -Infinity : Infinity;
-                const player = isMaximizing ? aiPlayer : humanPlayer;
-
-                for (let i = 0; i < boardSize; i++) {
-                    for (let j = 0; j < boardSize; j++) {
-                        if (boardState[i][j] === null) {
-                            boardState[i][j] = player;
-                            const score = minimax(depth + 1, !isMaximizing, alpha, beta);
-                            boardState[i][j] = null;
-                            if (isMaximizing) {
-                                bestVal = Math.max(bestVal, score);
-                                alpha = Math.max(alpha, bestVal);
-                            } else {
-                                bestVal = Math.min(bestVal, score);
-                                beta = Math.min(beta, bestVal);
+                if (isMaximizing) {
+                    let best = -Infinity;
+                    for (let i = 0; i < boardSize; i++) {
+                        for (let j = 0; j < boardSize; j++) {
+                            if (boardState[i][j] === null) {
+                                boardState[i][j] = aiPlayer;
+                                best = Math.max(best, minimax(depth + 1, !isMaximizing, alpha, beta));
+                                boardState[i][j] = null;
+                                alpha = Math.max(alpha, best);
+                                if (beta <= alpha) break;
                             }
-                            if (beta <= alpha) return bestVal;
                         }
+                         if (beta <= alpha) break;
                     }
+                    return best;
+                } else {
+                    let best = Infinity;
+                    for (let i = 0; i < boardSize; i++) {
+                        for (let j = 0; j < boardSize; j++) {
+                            if (boardState[i][j] === null) {
+                                boardState[i][j] = humanPlayer;
+                                best = Math.min(best, minimax(depth + 1, !isMaximizing, alpha, beta));
+                                boardState[i][j] = null;
+                                beta = Math.min(beta, best);
+                                if (beta <= alpha) break;
+                            }
+                        }
+                         if (beta <= alpha) break;
+                    }
+                    return best;
                 }
-                return bestVal;
             }
-
+            
             function getSearchDepth() {
                 if (boardSize === 3) return 9;
                 if (boardSize === 4) return 4;
-                return 3; 
+                return 3;
             }
-            
-            function evaluateBoard() {
-                if (boardSize === 3) return 0;
-                let totalScore = 0;
-                const winLength = getWinLength();
-                const evaluateWindow = (window) => {
-                    let score = 0;
-                    const aiCount = window.filter(p => p === aiPlayer).length;
-                    const humanCount = window.filter(p => p === humanPlayer).length;
-                    if (aiCount > 0 && humanCount > 0) return 0;
-                    if (aiCount > 0) {
-                        if (aiCount === winLength - 1) score += 5000;
-                        else if (aiCount === winLength - 2) score += 100;
-                        else score += 10;
-                    } else if (humanCount > 0) {
-                        if (humanCount === winLength - 1) score -= 10000;
-                        else if (humanCount === winLength - 2) score -= 500;
-                        else score -= 20;
-                    }
-                    return score;
-                };
-                for (let r = 0; r < boardSize; r++) {
-                    for (let c = 0; c < boardSize; c++) {
-                        if (c <= boardSize - winLength) { totalScore += evaluateWindow(boardState[r].slice(c, c + winLength)); }
-                        if (r <= boardSize - winLength) {
-                            let window = [];
-                            for(let i=0; i<winLength; i++) window.push(boardState[r+i][c]);
-                            totalScore += evaluateWindow(window);
-                        }
-                        if (r <= boardSize - winLength && c <= boardSize - winLength) {
-                            let window = [];
-                            for(let i=0; i<winLength; i++) window.push(boardState[r+i][c+i]);
-                            totalScore += evaluateWindow(window);
-                        }
-                        if (r <= boardSize - winLength && c >= winLength - 1) {
-                            let window = [];
-                            for(let i=0; i<winLength; i++) window.push(boardState[r+i][c-i]);
-                            totalScore += evaluateWindow(window);
-                        }
-                    }
-                }
-                return totalScore;
+
+            function evaluate() {
+                if (checkWin(aiPlayer)) return 10;
+                if (checkWin(humanPlayer)) return -10;
+                return 0;
             }
 
             // === Initial Load ===
             initVK();
         });
     </script>
+
 </body>
 </html>
+
