@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no, user-scalable=no, viewport-fit=cover">
-    <title>Tic-Tac-Toe Ultimate</title>
-    <!-- VK BRIDGE SCRIPT -->
+    <title>Tic-Tac-Toe for VK</title>
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/vk-bridge.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,13 +41,14 @@
             align-items: center;
             justify-content: center;
         }
-        .main-menu, .game-screen { width: 100%; position: relative; }
+        .main-menu, .game-screen { width: 100%; }
         .main-menu {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 20px;
             text-align: center;
+            transition: opacity var(--transition-speed), transform var(--transition-speed);
         }
         .main-menu.hidden, .game-screen.hidden { display: none; }
         .title {
@@ -104,6 +104,7 @@
         #pause-btn { background: none; border: none; color: var(--text-color); font-size: 1.8rem; cursor: pointer; transition: color var(--transition-speed); }
         #pause-btn:hover { color: var(--accent-color); }
         
+        /* НОВЫЙ БЛОК для позиционирования доски и линии */
         .board-container {
             position: relative;
             width: 100%;
@@ -115,6 +116,7 @@
             padding: var(--cell-gap); border-radius: var(--border-radius);
         }
         
+        /* НОВЫЙ БЛОК для SVG линии */
         #win-line-svg {
             position: absolute;
             top: 0;
@@ -130,6 +132,7 @@
             stroke-width: 8px;
             stroke-linecap: round;
             transition: stroke-dashoffset 0.5s ease-in-out;
+            display: none; /* Скрыта по умолчанию */
         }
 
         .cell {
@@ -174,7 +177,6 @@
 <body>
 
     <div class="container">
-        <!-- Main Menu -->
         <div id="main-menu" class="main-menu">
             <h1 class="title">TIC-TAC-TOE</h1>
             <div class="menu-section">
@@ -195,7 +197,6 @@
             <button id="start-game-btn" class="start-btn">Начать Игру</button>
             <div id="stats-display">Загрузка статистики...</div>
         </div>
-        <!-- Game Screen -->
         <div id="game-screen" class="game-screen hidden">
             <div class="game-header">
                 <div id="status-text">Ход X</div>
@@ -209,7 +210,6 @@
             </div>
         </div>
     </div>
-    <!-- Overlays -->
     <div id="pause-overlay" class="overlay">
         <div class="overlay-content">
             <h2>Пауза</h2>
@@ -245,8 +245,8 @@
 
             // === VK Integration (from user file) ===
             const APP_ID = 53865837; // ❗❗❗ ВАЖНО: ВСТАВЬТЕ ID ВАШЕГО ПРИЛОЖЕНИЯ ЗДЕСЬ
-            const STATS_VK_KEY_PREFIX = 'ticTacToeStats';
-            const STATS_LOCAL_KEY = 'ticTacToeLocalSave_v3';
+            const STATS_VK_KEY_PREFIX = 'ticTacToeStats_v4'; // Обновлен ключ во избежание конфликтов
+            const STATS_LOCAL_KEY = 'ticTacToeLocalSave_v4';
             let vkUser = null, vkUserId = null;
 
             async function initVK() {
@@ -268,25 +268,23 @@
             }
 
             async function saveStats() {
-                const dataToSave = { stats: stats, lastUpdated: Date.now(), syncVersion: 3 };
+                const dataToSave = { stats: stats, lastUpdated: Date.now(), syncVersion: 4 };
                 const dataString = JSON.stringify(dataToSave);
                 localStorage.setItem(STATS_LOCAL_KEY, dataString);
                 if (vkUserId) {
                     try {
-                        await vkBridge.send('VKWebAppStorageSet', {
-                            key: `${STATS_VK_KEY_PREFIX}_${vkUserId}`, value: dataString,
-                        });
+                        await vkBridge.send('VKWebAppStorageSet', { key: `${STATS_VK_KEY_PREFIX}_${vkUserId}`, value: dataString });
                     } catch (err) { console.error('Ошибка сохранения в VK Storage:', err); }
                 }
             }
-
+            
             async function loadStats() {
                 if (!vkUserId) { loadLocalStats(); return; }
                 try {
                     const response = await vkBridge.send('VKWebAppStorageGet', { keys: [`${STATS_VK_KEY_PREFIX}_${vkUserId}`] });
                     if (response.keys[0]?.value) {
                         const cloudData = JSON.parse(response.keys[0].value);
-                        if (cloudData.syncVersion === 3 && cloudData.stats) {
+                        if (cloudData.syncVersion === 4 && cloudData.stats) {
                             stats = cloudData.stats; return;
                         }
                     }
@@ -334,6 +332,7 @@
             
             function startGame() {
                 isGameOver = false;
+                // ИЗМЕНЕНО: Установка первого игрока на основе сохраненной очерёдности
                 currentPlayer = gameMode === 'pvc' ? stats.whoStartsNext || 'X' : 'X';
                 
                 boardState = Array(boardSize).fill(null).map(() => Array(boardSize).fill(null));
@@ -387,6 +386,7 @@
                 statusText.textContent = `Ход ${currentPlayer}`;
             }
             
+            // ИЗМЕНЕНО: Функция возвращает не просто true, а объект с информацией о победе
             function checkWin(player) {
                 const winLength = getWinLength();
                 for (let r = 0; r < boardSize; r++) {
@@ -418,6 +418,7 @@
 
             function isBoardFull() { return boardState.flat().every(cell => cell !== null); }
             
+            // ИЗМЕНЕНО: Функция принимает winInfo и меняет очерёдность хода
             async function endGame(isDraw, winInfo) {
                 isGameOver = true;
                 if (winInfo) {
@@ -430,6 +431,7 @@
                     if (isDraw) stats.ties++;
                     else if (currentPlayer === humanPlayer) stats.wins++;
                     else stats.losses++;
+                    // Меняем игрока, который начнёт следующую партию
                     stats.whoStartsNext = stats.whoStartsNext === 'X' ? 'O' : 'X';
                 }
                 stats.gamesPlayedSinceAd = (stats.gamesPlayedSinceAd || 0) + 1;
@@ -446,6 +448,7 @@
                 }
             }
             
+            // НОВАЯ ФУНКЦИЯ: Рисует победную линию
             function drawWinningLine(winInfo) {
                 const startCell = document.querySelector(`[data-row='${winInfo.cells[0].r}'][data-col='${winInfo.cells[0].c}']`);
                 const endCell = document.querySelector(`[data-row='${winInfo.cells[winInfo.cells.length - 1].r}'][data-col='${winInfo.cells[winInfo.cells.length - 1].c}']`);
@@ -486,8 +489,9 @@
                 if(stats) statsDisplay.textContent = `Статистика (VS ИИ): Побед: ${stats.wins} | Поражений: ${stats.losses} | Ничьи: ${stats.ties}`;
             }
 
-            // === AI LOGIC ===
+            // === AI LOGIC (с улучшениями) ===
             function getMovesMade() { return boardState.flat().filter(Boolean).length; }
+            
             function findBestMove() {
                 if (boardSize === 3 && getMovesMade() <= 1) {
                     const emptyCells = [];
@@ -514,6 +518,7 @@
                 if (bestMoves.length > 0) return bestMoves[Math.floor(Math.random() * bestMoves.length)];
                 return null;
             }
+
             function aiMove() {
                 if (isGameOver) return;
                 statusText.textContent = `Думает ${aiPlayer}...`;
@@ -528,15 +533,16 @@
                     } else { console.error("AI couldn't find a move."); }
                 });
             }
+
             function minimax(depth, isMaximizing, alpha, beta) {
-                const winInfoAI = checkWin(aiPlayer);
-                if (winInfoAI) return 100000 - depth;
-                const winInfoHuman = checkWin(humanPlayer);
-                if (winInfoHuman) return -100000 + depth;
+                if (checkWin(aiPlayer)) return 100000 - depth;
+                if (checkWin(humanPlayer)) return -100000 + depth;
                 if (isBoardFull()) return 0;
                 if (depth >= getSearchDepth()) return evaluateBoard();
+
                 let bestVal = isMaximizing ? -Infinity : Infinity;
                 const player = isMaximizing ? aiPlayer : humanPlayer;
+
                 for (let i = 0; i < boardSize; i++) {
                     for (let j = 0; j < boardSize; j++) {
                         if (boardState[i][j] === null) {
@@ -556,11 +562,13 @@
                 }
                 return bestVal;
             }
+
             function getSearchDepth() {
                 if (boardSize === 3) return 9;
                 if (boardSize === 4) return 4;
                 return 3; 
             }
+            
             function evaluateBoard() {
                 if (boardSize === 3) return 0;
                 let totalScore = 0;
