@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no, user-scalable=no, viewport-fit=cover">
     <title>Tic-Tac-Toe Ultimate</title>
+    <!-- VK BRIDGE SCRIPT -->
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/vk-bridge.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -41,7 +42,7 @@
             align-items: center;
             justify-content: center;
         }
-        .main-menu, .game-screen { width: 100%; }
+        .main-menu, .game-screen { width: 100%; position: relative; }
         .main-menu {
             display: flex;
             flex-direction: column;
@@ -102,15 +103,18 @@
         #status-text { font-size: 1.5rem; font-weight: 600; }
         #pause-btn { background: none; border: none; color: var(--text-color); font-size: 1.8rem; cursor: pointer; transition: color var(--transition-speed); }
         #pause-btn:hover { color: var(--accent-color); }
+        
         .board-container {
             position: relative;
             width: 100%;
         }
+
         #board {
             display: grid; grid-template-columns: repeat(var(--board-size), 1fr);
             gap: var(--cell-gap); width: 100%; background-color: var(--primary-color);
             padding: var(--cell-gap); border-radius: var(--border-radius);
         }
+        
         #win-line-svg {
             position: absolute;
             top: 0;
@@ -121,13 +125,13 @@
             z-index: 10;
             overflow: visible;
         }
+
         #win-line {
             stroke-width: 8px;
             stroke-linecap: round;
             transition: stroke-dashoffset 0.5s ease-in-out;
-            display: none;
-            filter: drop-shadow(0 0 5px currentColor); /* Неоновое свечение */
         }
+
         .cell {
             aspect-ratio: 1 / 1; background-color: var(--secondary-color);
             border-radius: 8px; display: flex; justify-content: center;
@@ -138,8 +142,8 @@
             cursor: not-allowed; font-size: min(10vw, calc(300px / var(--board-size) * 0.7));
             font-weight: 700; line-height: 1;
         }
-        .cell.x { color: var(--x-color); text-shadow: 0 0 10px var(--x-color);}
-        .cell.o { color: var(--o-color); text-shadow: 0 0 10px var(--o-color);}
+        .cell.x { color: var(--x-color); }
+        .cell.o { color: var(--o-color); }
         .overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(26, 26, 26, 0.8); backdrop-filter: blur(5px);
@@ -168,7 +172,9 @@
     </style>
 </head>
 <body>
+
     <div class="container">
+        <!-- Main Menu -->
         <div id="main-menu" class="main-menu">
             <h1 class="title">TIC-TAC-TOE</h1>
             <div class="menu-section">
@@ -189,6 +195,7 @@
             <button id="start-game-btn" class="start-btn">Начать Игру</button>
             <div id="stats-display">Загрузка статистики...</div>
         </div>
+        <!-- Game Screen -->
         <div id="game-screen" class="game-screen hidden">
             <div class="game-header">
                 <div id="status-text">Ход X</div>
@@ -202,6 +209,7 @@
             </div>
         </div>
     </div>
+    <!-- Overlays -->
     <div id="pause-overlay" class="overlay">
         <div class="overlay-content">
             <h2>Пауза</h2>
@@ -222,208 +230,81 @@
         </div>
     </div>
 
-   <script>
+    <script>
         document.addEventListener('DOMContentLoaded', async () => {
             // === DOM Elements and State ===
-            const mainMenu = document.getElementById('main-menu');
-            const gameScreen = document.getElementById('game-screen');
-            const boardElement = document.getElementById('board');
-            const statusText = document.getElementById('status-text');
-            const pauseBtn = document.getElementById('pause-btn');
-            const pauseOverlay = document.getElementById('pause-overlay');
-            const gameOverOverlay = document.getElementById('game-over-overlay');
-            const statsDisplay = document.getElementById('stats-display');
+            const mainMenu = document.getElementById('main-menu'), gameScreen = document.getElementById('game-screen'),
+                  boardElement = document.getElementById('board'), statusText = document.getElementById('status-text'),
+                  pauseBtn = document.getElementById('pause-btn'), pauseOverlay = document.getElementById('pause-overlay'),
+                  gameOverOverlay = document.getElementById('game-over-overlay'), statsDisplay = document.getElementById('stats-display'),
+                  winLine = document.getElementById('win-line');
 
-            let boardSize = 3;
-            let gameMode = 'pvc';
-            let currentPlayer = 'X';
-            let boardState = [];
-            let isGameOver = false;
-            let isPaused = false;
-            let humanPlayer = 'X';
-            let aiPlayer = 'O';
-            let stats = { wins: 0, losses: 0, ties: 0, gamesPlayedSinceAd: 0 };
+            let boardSize = 3, gameMode = 'pvc', currentPlayer = 'X', boardState = [],
+                isGameOver = false, isPaused = false, humanPlayer = 'X', aiPlayer = 'O',
+                stats = { wins: 0, losses: 0, ties: 0, gamesPlayedSinceAd: 0, whoStartsNext: 'X' };
 
-            // === VK Integration ===
-            const APP_ID = 53865837;
+            // === VK Integration (from user file) ===
+            const APP_ID = 53865837; // ❗❗❗ ВАЖНО: ВСТАВЬТЕ ID ВАШЕГО ПРИЛОЖЕНИЯ ЗДЕСЬ
             const STATS_VK_KEY_PREFIX = 'ticTacToeStats';
-            const STATS_LOCAL_KEY = 'ticTacToeLocalSave';
+            const STATS_LOCAL_KEY = 'ticTacToeLocalSave_v3';
+            let vkUser = null, vkUserId = null;
 
-            let vkUser = null;
-            let vkUserId = null;
-            let vkAccessToken = null;
-            
-            // Инициализация VK Bridge
-        async function initVK() {
-            try {
-                await vkBridge.send('VKWebAppInit', {});
-                
-                // Получаем информацию о пользователе
-                const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
-                vkUser = userInfo;
-                vkUserId = userInfo.id;
-                
-                // Получаем токен доступа
-                const tokenData = await vkBridge.send('VKWebAppGetAuthToken', {
-                    app_id: APP_ID,
-                    scope: 'storage'
-                });
-                vkAccessToken = tokenData.access_token;
-                
-                // Загружаем статистику
-                await loadStats();
-                
-                console.log('VK Bridge инициализирован');
-            } catch (error) {
-                console.error('Ошибка инициализации VK Bridge:', error);
-                // Загружаем локальные данные, если не удалось подключиться к VK
-                loadLocalStats();
+            async function initVK() {
+                if (APP_ID === 0) console.warn("Необходимо указать ID приложения в переменной APP_ID");
+                try {
+                    await vkBridge.send('VKWebAppInit', {});
+                    const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
+                    vkUser = userInfo;
+                    vkUserId = userInfo.id;
+                    await vkBridge.send('VKWebAppGetAuthToken', { app_id: APP_ID, scope: 'storage' });
+                    await loadStats();
+                    console.log('VK Bridge инициализирован');
+                } catch (error) {
+                    console.error('Ошибка инициализации VK Bridge, используется localStorage:', error);
+                    loadLocalStats();
+                }
+                updateStatsDisplay();
+                vkBridge.send('VKWebAppShowBannerAd', { banner_location: 'bottom' }).catch(e => {});
             }
-        }
-        await initVK();
-            
-            async function saveStats() {
-                const dataToSave = {
-                    stats: stats,
-                    lastUpdated: Date.now(),
-                    syncVersion: 1
-                };
-                const dataString = JSON.stringify(dataToSave);
-                
-                // Всегда сохраняем локально как резервную копию
-                localStorage.setItem(STATS_LOCAL_KEY, dataString);
 
-                // Пытаемся сохранить в облако VK
+            async function saveStats() {
+                const dataToSave = { stats: stats, lastUpdated: Date.now(), syncVersion: 3 };
+                const dataString = JSON.stringify(dataToSave);
+                localStorage.setItem(STATS_LOCAL_KEY, dataString);
                 if (vkUserId) {
                     try {
                         await vkBridge.send('VKWebAppStorageSet', {
-                            key: `${STATS_VK_KEY_PREFIX}_${vkUserId}`,
-                            value: dataString,
+                            key: `${STATS_VK_KEY_PREFIX}_${vkUserId}`, value: dataString,
                         });
-                        console.log("Статистика сохранена в VK Storage.");
-                    } catch (err) {
-                        console.error('Ошибка сохранения в VK Storage:', err);
-                    }
+                    } catch (err) { console.error('Ошибка сохранения в VK Storage:', err); }
                 }
             }
-            
-            async function loadStats() {
-                if (!vkUserId) {
-                    loadLocalStats();
-                    updateStatsDisplay();
-                    return;
-                }
 
+            async function loadStats() {
+                if (!vkUserId) { loadLocalStats(); return; }
                 try {
-                    const response = await vkBridge.send('VKWebAppStorageGet', {
-                        keys: [`${STATS_VK_KEY_PREFIX}_${vkUserId}`]
-                    });
-                    
+                    const response = await vkBridge.send('VKWebAppStorageGet', { keys: [`${STATS_VK_KEY_PREFIX}_${vkUserId}`] });
                     if (response.keys[0]?.value) {
                         const cloudData = JSON.parse(response.keys[0].value);
-                        if (cloudData.syncVersion === 1 && cloudData.stats) {
-                            stats = cloudData.stats;
-                            console.log("Статистика загружена из VK Storage.");
-                            updateStatsDisplay();
-                            return;
+                        if (cloudData.syncVersion === 3 && cloudData.stats) {
+                            stats = cloudData.stats; return;
                         }
                     }
-                    // Если в облаке нет валидных данных, пробуем локальные
                     loadLocalStats();
-                    updateStatsDisplay();
-                } catch (err) {
-                    console.error('Ошибка загрузки из VK Storage:', err);
-                    loadLocalStats();
-                    updateStatsDisplay();
-                }
+                } catch (err) { loadLocalStats(); }
             }
-            
+
             function loadLocalStats() {
                 const localData = localStorage.getItem(STATS_LOCAL_KEY);
                 if (localData) {
                     try {
                         const parsedData = JSON.parse(localData);
-                        if (parsedData.stats) {
-                           stats = parsedData.stats;
-                           console.log("Статистика загружена из localStorage.");
-                        }
-                    } catch {
-                        console.error("Ошибка парсинга локальных данных.");
-                    }
+                        if (parsedData.stats) stats = parsedData.stats;
+                    } catch { console.error("Ошибка парсинга локальных данных."); }
                 }
             }
- 
-async function validateSignature(params) {
-    const sign = params.get('sign');
-    const checkParams = new URLSearchParams();
-    
-    params.forEach((value, key) => {
-        if (key !== 'sign') checkParams.set(key, value);
-    });
 
-    const isValid = await vkBridge.send('VKWebAppVerifyMessage', {
-        message: checkParams.toString(),
-        signature: sign
-    });
-
-    if (!isValid) throw new Error('Invalid signature');
-}
-
-// Показ баннера рекламы
-function showBannerAd() {
-    vkBridge.send("VKWebAppShowBannerAd")
-        .then(response => {
-            console.log('Баннерная реклама показана:', response);
-        })
-        .catch(error => {
-            console.error('Ошибка при показе баннерной рекламы:', error);
-        });
-}
-
-// Скрытие баннера рекламы
-function hideBannerAd() {
-    vkBridge.send("VKWebAppHideBannerAd")
-        .then(response => {
-            console.log('Баннерная реклама скрыта:', response);
-        })
-        .catch(error => {
-            console.error('Ошибка при скрытии баннерной рекламы:', error);
-        });
-}
-
-// Подписка на события
-vkBridge.subscribe((e) => {
-    if (e.detail.type === 'VKWebAppBannerAdUpdated') {
-        console.log('Баннерная реклама обновлена:', e);
-    } else if (e.detail.type === 'VKWebAppBannerAdClosedByUser') {
-        console.log('Пользователь закрыл рекламу:', e);
-    }
-});
-
-function checkAndShowAd() {
-    vkBridge.send('VKWebAppCheckNativeAds')
-    .then(data => {
-        if (data.available) {
-            // Если рекламные материалы доступны, показываем их
-            vkBridge.send('VKWebAppShowNativeAds')
-            .then(() => {
-                // Успешное отображение рекламы
-            })
-            .catch(error => {
-                console.error('Ошибка при показе рекламы:', error);
-            });
-        } else {
-            console.log('Рекламные материалы не доступны.');
-        }
-    })
-    .catch(error => {
-        console.error('Ошибка при проверке наличия рекламы:', error);
-    });
-}
-
-
-
-  // --- Обработчики событий ---
+            // === Event Listeners ===
             document.getElementById('board-size-selector').addEventListener('click', (e) => {
                 if (e.target.tagName === 'BUTTON') {
                     handleSelector(e.target, '#board-size-selector');
@@ -444,7 +325,7 @@ function checkAndShowAd() {
             document.getElementById('restart-game-over-btn').addEventListener('click', () => { hideOverlay(gameOverOverlay); startGame(); });
             document.getElementById('menu-game-over-btn').addEventListener('click', () => { hideOverlay(gameOverOverlay); showMainMenu(); });
 
-            // --- Логика игры (с новыми функциями) ---
+            // === Core Game Functions ===
             function handleSelector(target, parentSelector) {
                 document.querySelectorAll(`${parentSelector} button`).forEach(btn => btn.classList.remove('active'));
                 target.classList.add('active');
@@ -454,10 +335,12 @@ function checkAndShowAd() {
             function startGame() {
                 isGameOver = false;
                 currentPlayer = gameMode === 'pvc' ? stats.whoStartsNext || 'X' : 'X';
+                
                 boardState = Array(boardSize).fill(null).map(() => Array(boardSize).fill(null));
                 boardElement.innerHTML = '';
                 boardElement.style.setProperty('--board-size', boardSize);
                 winLine.style.display = 'none';
+
                 for (let i = 0; i < boardSize; i++) {
                     for (let j = 0; j < boardSize; j++) {
                         const cell = document.createElement('div');
@@ -479,15 +362,19 @@ function checkAndShowAd() {
                 const cell = e.target;
                 const row = cell.dataset.row; const col = cell.dataset.col;
                 if (boardState[row][col] || (gameMode === 'pvc' && currentPlayer === aiPlayer)) return;
+                
                 makeMove(row, col, currentPlayer);
                 const winInfo = checkWin(currentPlayer);
+
                 if (winInfo) {
                     endGame(false, winInfo);
                 } else if (isBoardFull()) {
                     endGame(true, null);
                 } else {
                     switchPlayer();
-                    if (gameMode === 'pvc' && currentPlayer === aiPlayer) setTimeout(aiMove, 500);
+                    if (gameMode === 'pvc' && currentPlayer === aiPlayer) {
+                        setTimeout(aiMove, 500);
+                    }
                 }
             }
             function makeMove(row, col, player) {
@@ -505,20 +392,24 @@ function checkAndShowAd() {
                 for (let r = 0; r < boardSize; r++) {
                     for (let c = 0; c < boardSize; c++) {
                         if (c <= boardSize - winLength) {
-                            let line = []; for (let i = 0; i < winLength; i++) line.push({r, c:c+i});
-                            if (line.every(p => boardState[p.r][p.c] === player)) return { cells: line };
+                            let line = [];
+                            for (let i = 0; i < winLength; i++) line.push({r:r, c:c+i});
+                            if (line.every(p => boardState[p.r][p.c] === player)) return { win: true, cells: line };
                         }
                         if (r <= boardSize - winLength) {
-                            let line = []; for (let i = 0; i < winLength; i++) line.push({r:r+i, c});
-                            if (line.every(p => boardState[p.r][p.c] === player)) return { cells: line };
+                            let line = [];
+                            for (let i = 0; i < winLength; i++) line.push({r:r+i, c:c});
+                            if (line.every(p => boardState[p.r][p.c] === player)) return { win: true, cells: line };
                         }
                         if (r <= boardSize - winLength && c <= boardSize - winLength) {
-                            let line = []; for (let i = 0; i < winLength; i++) line.push({r:r+i, c:c+i});
-                            if (line.every(p => boardState[p.r][p.c] === player)) return { cells: line };
+                            let line = [];
+                            for (let i = 0; i < winLength; i++) line.push({r:r+i, c:c+i});
+                            if (line.every(p => boardState[p.r][p.c] === player)) return { win: true, cells: line };
                         }
                         if (r <= boardSize - winLength && c >= winLength - 1) {
-                            let line = []; for (let i = 0; i < winLength; i++) line.push({r:r+i, c:c-i});
-                            if (line.every(p => boardState[p.r][p.c] === player)) return { cells: line };
+                            let line = [];
+                            for (let i = 0; i < winLength; i++) line.push({r:r+i, c:c-i});
+                            if (line.every(p => boardState[p.r][p.c] === player)) return { win: true, cells: line };
                         }
                     }
                 }
@@ -529,7 +420,9 @@ function checkAndShowAd() {
             
             async function endGame(isDraw, winInfo) {
                 isGameOver = true;
-                if (winInfo) drawWinningLine(winInfo);
+                if (winInfo) {
+                    drawWinningLine(winInfo);
+                }
                 const message = isDraw ? "Ничья!" : `Победил ${currentPlayer}!`;
                 document.getElementById('game-over-message').textContent = message;
                 showOverlay(gameOverOverlay);
@@ -556,20 +449,30 @@ function checkAndShowAd() {
             function drawWinningLine(winInfo) {
                 const startCell = document.querySelector(`[data-row='${winInfo.cells[0].r}'][data-col='${winInfo.cells[0].c}']`);
                 const endCell = document.querySelector(`[data-row='${winInfo.cells[winInfo.cells.length - 1].r}'][data-col='${winInfo.cells[winInfo.cells.length - 1].c}']`);
+                
                 const boardRect = boardElement.getBoundingClientRect();
                 const startRect = startCell.getBoundingClientRect();
                 const endRect = endCell.getBoundingClientRect();
-                const x1 = startRect.left + startRect.width / 2 - boardRect.left, y1 = startRect.top + startRect.height / 2 - boardRect.top;
-                const x2 = endRect.left + endRect.width / 2 - boardRect.left, y2 = endRect.top + endRect.height / 2 - boardRect.top;
-                winLine.setAttribute('x1', x1); winLine.setAttribute('y1', y1);
-                winLine.setAttribute('x2', x2); winLine.setAttribute('y2', y2);
+
+                const x1 = startRect.left + startRect.width / 2 - boardRect.left;
+                const y1 = startRect.top + startRect.height / 2 - boardRect.top;
+                const x2 = endRect.left + endRect.width / 2 - boardRect.left;
+                const y2 = endRect.top + endRect.height / 2 - boardRect.top;
+
+                winLine.setAttribute('x1', x1);
+                winLine.setAttribute('y1', y1);
+                winLine.setAttribute('x2', x2);
+                winLine.setAttribute('y2', y2);
                 winLine.style.stroke = `var(--${currentPlayer.toLowerCase()}-color)`;
-                winLine.style.setProperty('color', `var(--${currentPlayer.toLowerCase()}-color)`);
+                
                 const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
                 winLine.style.strokeDasharray = length;
                 winLine.style.strokeDashoffset = length;
                 winLine.style.display = 'block';
-                setTimeout(() => { winLine.style.strokeDashoffset = 0; }, 100);
+                
+                setTimeout(() => {
+                    winLine.style.strokeDashoffset = 0;
+                }, 100);
             }
 
             function togglePause() { isPaused = !isPaused; isPaused ? showOverlay(pauseOverlay) : hideOverlay(pauseOverlay); }
@@ -583,16 +486,16 @@ function checkAndShowAd() {
                 if(stats) statsDisplay.textContent = `Статистика (VS ИИ): Побед: ${stats.wins} | Поражений: ${stats.losses} | Ничьи: ${stats.ties}`;
             }
 
-            // === Улучшенный ИИ ===
+            // === AI LOGIC ===
             function getMovesMade() { return boardState.flat().filter(Boolean).length; }
-            
             function findBestMove() {
                 if (boardSize === 3 && getMovesMade() <= 1) {
                     const emptyCells = [];
                     for(let i=0; i<boardSize; i++) for(let j=0; j<boardSize; j++) if(!boardState[i][j]) emptyCells.push({row: i, col: j});
                     return emptyCells[Math.floor(Math.random() * emptyCells.length)];
                 }
-                let bestVal = -Infinity, bestMoves = [];
+                let bestVal = -Infinity;
+                let bestMoves = [];
                 for (let i = 0; i < boardSize; i++) {
                     for (let j = 0; j < boardSize; j++) {
                         if (boardState[i][j] === null) {
@@ -611,7 +514,6 @@ function checkAndShowAd() {
                 if (bestMoves.length > 0) return bestMoves[Math.floor(Math.random() * bestMoves.length)];
                 return null;
             }
-
             function aiMove() {
                 if (isGameOver) return;
                 statusText.textContent = `Думает ${aiPlayer}...`;
@@ -626,10 +528,11 @@ function checkAndShowAd() {
                     } else { console.error("AI couldn't find a move."); }
                 });
             }
-
             function minimax(depth, isMaximizing, alpha, beta) {
-                if (checkWin(aiPlayer)) return 100000 - depth;
-                if (checkWin(humanPlayer)) return -100000 + depth;
+                const winInfoAI = checkWin(aiPlayer);
+                if (winInfoAI) return 100000 - depth;
+                const winInfoHuman = checkWin(humanPlayer);
+                if (winInfoHuman) return -100000 + depth;
                 if (isBoardFull()) return 0;
                 if (depth >= getSearchDepth()) return evaluateBoard();
                 let bestVal = isMaximizing ? -Infinity : Infinity;
@@ -653,13 +556,11 @@ function checkAndShowAd() {
                 }
                 return bestVal;
             }
-
             function getSearchDepth() {
                 if (boardSize === 3) return 9;
                 if (boardSize === 4) return 4;
                 return 3; 
             }
-            
             function evaluateBoard() {
                 if (boardSize === 3) return 0;
                 let totalScore = 0;
@@ -702,8 +603,10 @@ function checkAndShowAd() {
                 }
                 return totalScore;
             }
+
+            // === Initial Load ===
+            initVK();
         });
     </script>
-
 </body>
 </html>
