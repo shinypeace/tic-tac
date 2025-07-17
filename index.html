@@ -379,30 +379,21 @@
             let vkUserId = null;
             let vkAccessToken = null;
             
-            // Инициализация VK Bridge
         async function initVK() {
             try {
                 await vkBridge.send('VKWebAppInit', {});
-                
-                // Получаем информацию о пользователе
                 const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
                 vkUser = userInfo;
                 vkUserId = userInfo.id;
-                
-                // Получаем токен доступа
                 const tokenData = await vkBridge.send('VKWebAppGetAuthToken', {
                     app_id: APP_ID,
                     scope: 'storage'
                 });
                 vkAccessToken = tokenData.access_token;
-                
-                // Загружаем статистику
                 await loadStats();
-                
                 console.log('VK Bridge инициализирован');
             } catch (error) {
                 console.error('Ошибка инициализации VK Bridge:', error);
-                // Загружаем локальные данные, если не удалось подключиться к VK
                 loadLocalStats();
             }
         }
@@ -415,11 +406,7 @@
                     syncVersion: 1
                 };
                 const dataString = JSON.stringify(dataToSave);
-                
-                // Всегда сохраняем локально как резервную копию
                 localStorage.setItem(STATS_LOCAL_KEY, dataString);
-
-                // Пытаемся сохранить в облако VK
                 if (vkUserId) {
                     try {
                         await vkBridge.send('VKWebAppStorageSet', {
@@ -439,12 +426,10 @@
                     updateStatsDisplay();
                     return;
                 }
-
                 try {
                     const response = await vkBridge.send('VKWebAppStorageGet', {
                         keys: [`${STATS_VK_KEY_PREFIX}_${vkUserId}`]
                     });
-                    
                     if (response.keys[0]?.value) {
                         const cloudData = JSON.parse(response.keys[0].value);
                         if (cloudData.syncVersion === 1 && cloudData.stats) {
@@ -454,7 +439,6 @@
                             return;
                         }
                     }
-                    // Если в облаке нет валидных данных, пробуем локальные
                     loadLocalStats();
                     updateStatsDisplay();
                 } catch (err) {
@@ -479,75 +463,34 @@
                 }
             }
  
-async function validateSignature(params) {
-    const sign = params.get('sign');
-    const checkParams = new URLSearchParams();
-    
-    params.forEach((value, key) => {
-        if (key !== 'sign') checkParams.set(key, value);
-    });
+            async function validateSignature(params) {
+                const sign = params.get('sign');
+                const checkParams = new URLSearchParams();
+                params.forEach((value, key) => {
+                    if (key !== 'sign') checkParams.set(key, value);
+                });
+                const isValid = await vkBridge.send('VKWebAppVerifyMessage', {
+                    message: checkParams.toString(),
+                    signature: sign
+                });
+                if (!isValid) throw new Error('Invalid signature');
+            }
 
-    const isValid = await vkBridge.send('VKWebAppVerifyMessage', {
-        message: checkParams.toString(),
-        signature: sign
-    });
+            function showBannerAd() {
+                vkBridge.send("VKWebAppShowBannerAd").catch(e => console.error(e));
+            }
 
-    if (!isValid) throw new Error('Invalid signature');
-}
+            function hideBannerAd() {
+                vkBridge.send("VKWebAppHideBannerAd").catch(e => console.error(e));
+            }
 
-// Показ баннера рекламы
-function showBannerAd() {
-    vkBridge.send("VKWebAppShowBannerAd")
-        .then(response => {
-            console.log('Баннерная реклама показана:', response);
-        })
-        .catch(error => {
-            console.error('Ошибка при показе баннерной рекламы:', error);
-        });
-}
-
-// Скрытие баннера рекламы
-function hideBannerAd() {
-    vkBridge.send("VKWebAppHideBannerAd")
-        .then(response => {
-            console.log('Баннерная реклама скрыта:', response);
-        })
-        .catch(error => {
-            console.error('Ошибка при скрытии баннерной рекламы:', error);
-        });
-}
-
-// Подписка на события
-vkBridge.subscribe((e) => {
-    if (e.detail.type === 'VKWebAppBannerAdUpdated') {
-        console.log('Баннерная реклама обновлена:', e);
-    } else if (e.detail.type === 'VKWebAppBannerAdClosedByUser') {
-        console.log('Пользователь закрыл рекламу:', e);
-    }
-});
-
-function checkAndShowAd() {
-    vkBridge.send('VKWebAppCheckNativeAds')
-    .then(data => {
-        if (data.available) {
-            // Если рекламные материалы доступны, показываем их
-            vkBridge.send('VKWebAppShowNativeAds')
-            .then(() => {
-                // Успешное отображение рекламы
-            })
-            .catch(error => {
-                console.error('Ошибка при показе рекламы:', error);
+            vkBridge.subscribe((e) => {
+                if (e.detail.type === 'VKWebAppBannerAdUpdated') {
+                    console.log('Баннерная реклама обновлена:', e);
+                } else if (e.detail.type === 'VKWebAppBannerAdClosedByUser') {
+                    console.log('Пользователь закрыл рекламу:', e);
+                }
             });
-        } else {
-            console.log('Рекламные материалы не доступны.');
-        }
-    })
-    .catch(error => {
-        console.error('Ошибка при проверке наличия рекламы:', error);
-    });
-}
-
-
 
             // === Event Listeners ===
             document.getElementById('board-size-selector').addEventListener('click', (e) => {
@@ -556,17 +499,14 @@ function checkAndShowAd() {
                     boardSize = parseInt(e.target.dataset.size);
                 }
             });
-
             document.getElementById('game-mode-selector').addEventListener('click', (e) => {
                 if (e.target.classList.contains('btn')) {
                     handleSelector(e.target, '#game-mode-selector');
                     gameMode = e.target.dataset.mode;
                 }
             });
-
             document.getElementById('start-game-btn').addEventListener('click', startGame);
             pauseBtn.addEventListener('click', togglePause);
-            
             document.getElementById('resume-btn').addEventListener('click', togglePause);
             document.getElementById('restart-pause-btn').addEventListener('click', () => {
                 togglePause();
@@ -585,79 +525,64 @@ function checkAndShowAd() {
                 showMainMenu();
             });
 
-
             // === Core Game Functions ===
             function handleSelector(target, parentSelector) {
                 document.querySelectorAll(`${parentSelector} .btn`).forEach(btn => btn.classList.remove('active'));
                 target.classList.add('active');
             }
 
-function startGame() {
-    isGameOver = false;
+            function startGame() {
+                isGameOver = false;
+                if (gameMode === 'pvc') {
+                    currentPlayer = whoStartsNext;
+                    whoStartsNext = (whoStartsNext === humanPlayer) ? aiPlayer : humanPlayer;
+                } else {
+                    currentPlayer = 'X';
+                    whoStartsNext = 'X';
+                }
+                boardState = Array(boardSize).fill(null).map(() => Array(boardSize).fill(null));
+                boardElement.innerHTML = '';
+                boardElement.style.setProperty('--board-size', boardSize);
+                for (let i = 0; i < boardSize; i++) {
+                    for (let j = 0; j < boardSize; j++) {
+                        const cell = document.createElement('div');
+                        cell.classList.add('cell');
+                        cell.dataset.row = i;
+                        cell.dataset.col = j;
+                        cell.addEventListener('click', handleCellClick);
+                        boardElement.appendChild(cell);
+                    }
+                }
+                statusText.textContent = `Ход ${currentPlayer}`;
+                mainMenu.classList.add('hidden');
+                gameScreen.classList.remove('hidden');
+                if (gameMode === 'pvc' && currentPlayer === aiPlayer) {
+                    setTimeout(aiMove, 500);
+                }
+                showBannerAd();
+            }
 
-    // ИЗМЕНЕНО: Логика определения, кто ходит первым
-    if (gameMode === 'pvc') {
-        currentPlayer = whoStartsNext;
-        // Следующую игру начнет другой игрок
-        whoStartsNext = (whoStartsNext === humanPlayer) ? aiPlayer : humanPlayer;
-    } else {
-        // В режиме PvP всегда начинает 'X'
-        currentPlayer = 'X';
-        whoStartsNext = 'X'; // Сбрасываем для следующей игры против ИИ
-    }
-    
-    boardState = Array(boardSize).fill(null).map(() => Array(boardSize).fill(null));
-    boardElement.innerHTML = '';
-    boardElement.style.setProperty('--board-size', boardSize);
-
-    for (let i = 0; i < boardSize; i++) {
-        for (let j = 0; j < boardSize; j++) {
-            const cell = document.createElement('div');
-            cell.classList.add('cell');
-            cell.dataset.row = i;
-            cell.dataset.col = j;
-            cell.addEventListener('click', handleCellClick);
-            boardElement.appendChild(cell);
-        }
-    }
-
-    statusText.textContent = Ход ${currentPlayer};
-    mainMenu.classList.add('hidden');
-    gameScreen.classList.remove('hidden');
-    
-    if (gameMode === 'pvc' && currentPlayer === aiPlayer) {
-        // Если игру начинает ИИ, делаем его ход
-        setTimeout(aiMove, 500);
-    }
-
-    showBannerAd();
-}
-
-function handleCellClick(e) {
-    if (isGameOver || isPaused) return;
-    const cell = e.target;
-    const row = cell.dataset.row;
-    const col = cell.dataset.col;
-
-    if (boardState[row][col] || (gameMode === 'pvc' && currentPlayer === aiPlayer)) {
-        return;
-    }
-
-    makeMove(row, col, currentPlayer);
-    
-    // ИЗМЕНЕНО: Проверка на победу
-    const winInfo = checkWin(currentPlayer);
-    if (winInfo) {
-        endGame(false, winInfo.line); // Передаем победную линию
-    } else if (isBoardFull()) {
-        endGame(true, null);
-    } else {
-        switchPlayer();
-        if (gameMode === 'pvc' && currentPlayer === aiPlayer) {
-            setTimeout(aiMove, 500);
-        }
-    }
-}
+            function handleCellClick(e) {
+                if (isGameOver || isPaused) return;
+                const cell = e.target;
+                const row = cell.dataset.row;
+                const col = cell.dataset.col;
+                if (boardState[row][col] || (gameMode === 'pvc' && currentPlayer === aiPlayer)) {
+                    return;
+                }
+                makeMove(row, col, currentPlayer);
+                const winInfo = checkWin(currentPlayer);
+                if (winInfo) {
+                    endGame(false, winInfo.line);
+                } else if (isBoardFull()) {
+                    endGame(true, null);
+                } else {
+                    switchPlayer();
+                    if (gameMode === 'pvc' && currentPlayer === aiPlayer) {
+                        setTimeout(aiMove, 500);
+                    }
+                }
+            }
 
             function makeMove(row, col, player) {
                 boardState[row][col] = player;
@@ -671,117 +596,51 @@ function handleCellClick(e) {
                 statusText.textContent = `Ход ${currentPlayer}`;
             }
 
-function checkWin(player) {
-    const winLength = getWinLength();
-
-    const checkLine = (line) => {
-        for (let i = 0; i <= line.length - winLength; i++) {
-            const segment = line.slice(i, i + winLength);
-            if (segment.every(cell => boardState[cell.row][cell.col] === player)) {
-                return segment; // Возвращаем победный сегмент
-            }
-        }
-        return null;
-    };
-
-    // Проверка всех строк, столбцов и диагоналей
-    for (let i = 0; i < boardSize; i++) {
-        // Горизонтали
-        const rowLine = Array.from({ length: boardSize }, (_, j) => ({ row: i, col: j }));
-        let win = checkLine(rowLine);
-        if (win) return { player, line: win };
-
-        // Вертикали
-        const colLine = Array.from({ length: boardSize }, (_, j) => ({ row: j, col: i }));
-        win = checkLine(colLine);
-        if (win) return { player, line: win };
-    }
-
-    // Диагонали
-    for (let i = 0; i <= boardSize - winLength; i++) {
-        for (let j = 0; j <= boardSize - winLength; j++) {
-            // Главные диагонали (сверху-слева -> вниз-вправо)
-            let diag1 = [];
-            for (let k = 0; k < boardSize; k++) {
-                if (i + k < boardSize && j + k < boardSize) {
-                    diag1.push({ row: i + k, col: j + k });
-                }
-            }
-            if (diag1.length >= winLength) {
-                 let win = checkLine(diag1);
-                 if (win) return { player, line: win };
-            }
-
-            // Побочные диагонали (сверху-справа -> вниз-влево)
-            let diag2 = [];
-            for (let k = 0; k < boardSize; k++) {
-                 if (i + k < boardSize && j + winLength - 1 - k >= 0 && j + winLength - 1 - k < boardSize) {
-                    diag2.push({ row: i + k, col: j + winLength - 1 - k });
-                }
-            }
-            if(diag2.length >= winLength) {
-                let win = checkLine(diag2.slice().reverse()); // Проверяем в правильном порядке
-                if (win) return { player, line: win };
-            }
-        }
-    }
-    
-    return null;
-}
-
             function isBoardFull() {
                 return boardState.flat().every(cell => cell !== null);
             }
 
-async function endGame(isDraw, winningLine) {
-    isGameOver = true;
-
-    // Функция для подсветки линии
-    const highlightWinningLine = (line) => {
-        line.forEach(cell => {
-            const cellElement = document.querySelector(`[data-row='${cell.row}'][data-col='${cell.col}']`);
-            if (cellElement) {
-                cellElement.classList.add('win');
+            async function endGame(isDraw, winningLine) {
+                isGameOver = true;
+                const highlightWinningLine = (line) => {
+                    line.forEach(cell => {
+                        const cellElement = document.querySelector(`[data-row='${cell.row}'][data-col='${cell.col}']`);
+                        if (cellElement) {
+                            cellElement.classList.add('win');
+                        }
+                    });
+                };
+                const showResult = () => {
+                    const message = isDraw ? "Ничья!" : `Победил ${currentPlayer}!`;
+                    document.getElementById('game-over-message').textContent = message;
+                    showOverlay(gameOverOverlay);
+                };
+                if (winningLine) {
+                    highlightWinningLine(winningLine);
+                    setTimeout(showResult, 800);
+                } else {
+                    showResult();
+                }
+                if (gameMode === 'pvc') {
+                    if (isDraw) stats.ties++;
+                    else if (currentPlayer === humanPlayer) stats.wins++;
+                    else stats.losses++;
+                }
+                stats.gamesPlayedSinceAd = (stats.gamesPlayedSinceAd || 0) + 1;
+                await saveStats();
+                updateStatsDisplay();
+                if (stats.gamesPlayedSinceAd >= 3) {
+                    try {
+                        const adResult = await vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' });
+                        if(adResult.result) {
+                            stats.gamesPlayedSinceAd = 0;
+                            await saveStats();
+                        }
+                    } catch (error) {
+                        console.error('Ошибка показа межстраничной рекламы:', error);
+                    }
+                }
             }
-        });
-    };
-
-    // Показываем результат после небольшой задержки
-    const showResult = () => {
-        const message = isDraw ? "Ничья!" : Победил ${currentPlayer}!;
-        document.getElementById('game-over-message').textContent = message;
-        showOverlay(gameOverOverlay);
-    };
-
-    if (winningLine) {
-        highlightWinningLine(winningLine);
-        setTimeout(showResult, 800); // Даем время увидеть линию
-    } else {
-        showResult(); // Если ничья, показываем сразу
-    }
-
-    if (gameMode === 'pvc') {
-        if (isDraw) stats.ties++;
-        else if (currentPlayer === humanPlayer) stats.wins++;
-        else stats.losses++;
-    }
-    
-    stats.gamesPlayedSinceAd = (stats.gamesPlayedSinceAd || 0) + 1;
-    await saveStats();
-    updateStatsDisplay();
-
-    if (stats.gamesPlayedSinceAd >= 3) {
-        try {
-            const adResult = await vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' });
-            if(adResult.result) {
-                 stats.gamesPlayedSinceAd = 0;
-                 await saveStats();
-            }
-        } catch (error) {
-            console.error('Ошибка показа межстраничной рекламы:', error);
-        }
-    }
-}
             
             function togglePause() {
                 isPaused = !isPaused;
@@ -809,177 +668,194 @@ async function endGame(isDraw, winningLine) {
                 }
             }
 
+            // === AI Logic, Win Conditions, and Helpers ===
+            function getWinLength() {
+                return boardSize >= 4 ? 4 : 3;
+            }
 
-            // === AI Logic (Minimax) ===
-
-// НОВАЯ ФУНКЦИЯ: Определяет, сколько в ряд нужно для победы
-function getWinLength() {
-    return boardSize >= 4 ? 4 : 3;
-}
-
-function aiMove() {
-    if (isGameOver) return;
-    statusText.textContent = Думает ${aiPlayer}...;
-
-    requestAnimationFrame(() => {
-        // ИЗМЕНЕНО: Для 3х3 первый ход ИИ всегда случайный
-        const movesMade = boardState.flat().filter(cell => cell !== null).length;
-        if (boardSize === 3 && movesMade <= 1) {
-            const emptyCells = [];
-            for (let i = 0; i < boardSize; i++) {
-                for (let j = 0; j < boardSize; j++) {
-                    if (boardState[i][j] === null) emptyCells.push({ row: i, col: j });
+            function checkWin(player) {
+                const winLength = getWinLength();
+                const checkLine = (line) => {
+                    for (let i = 0; i <= line.length - winLength; i++) {
+                        const segment = line.slice(i, i + winLength);
+                        if (segment.every(cell => boardState[cell.row][cell.col] === player)) {
+                            return segment;
+                        }
+                    }
+                    return null;
+                };
+                for (let i = 0; i < boardSize; i++) {
+                    const rowLine = Array.from({ length: boardSize }, (_, j) => ({ row: i, col: j }));
+                    let win = checkLine(rowLine);
+                    if (win) return { player, line: win };
+                    const colLine = Array.from({ length: boardSize }, (_, j) => ({ row: j, col: i }));
+                    win = checkLine(colLine);
+                    if (win) return { player, line: win };
                 }
-            }
-            if (emptyCells.length > 0) {
-                 const randomMove = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-                 makeMove(randomMove.row, randomMove.col, aiPlayer);
-            }
-        } else {
-             const bestMove = findBestMove();
-             if (bestMove) {
-                 makeMove(bestMove.row, bestMove.col, aiPlayer);
-             }
-        }
-
-        const winInfo = checkWin(aiPlayer);
-        if (winInfo) {
-            endGame(false, winInfo.line);
-        } else if (isBoardFull()) {
-            endGame(true, null);
-        } else {
-            switchPlayer();
-        }
-    });
-}
-
-function findBestMove() {
-    let bestVal = -Infinity;
-    let bestMoves = [];
-
-    for (let i = 0; i < boardSize; i++) {
-        for (let j = 0; j < boardSize; j++) {
-            if (boardState[i][j] === null) {
-                boardState[i][j] = aiPlayer;
-                let moveVal = minimax(0, false, -Infinity, Infinity);
-                boardState[i][j] = null;
-
-                if (moveVal > bestVal) {
-                    bestVal = moveVal;
-                    bestMoves = [{ row: i, col: j }];
-                } else if (moveVal === bestVal) {
-                    bestMoves.push({ row: i, col: j });
+                for (let i = 0; i <= boardSize - winLength; i++) {
+                    for (let j = 0; j <= boardSize - winLength; j++) {
+                        let diag1 = [];
+                        for (let k = 0; k < boardSize; k++) {
+                            if (i + k < boardSize && j + k < boardSize) {
+                                diag1.push({ row: i + k, col: j + k });
+                            }
+                        }
+                        if (diag1.length >= winLength) {
+                            let win = checkLine(diag1);
+                            if (win) return { player, line: win };
+                        }
+                        let diag2 = [];
+                         for (let k = 0; k < boardSize; k++) {
+                            if (i + k < boardSize && (boardSize - 1 - j - k) >= 0) {
+                                diag2.push({ row: i + k, col: (boardSize - 1 - j - k) });
+                            }
+                        }
+                        if(diag2.length >= winLength) {
+                            let win = checkLine(diag2);
+                            if (win) return { player, line: win };
+                        }
+                    }
                 }
+                return null;
             }
-        }
-    }
-    
-    if (bestMoves.length > 0) {
-        return bestMoves[Math.floor(Math.random() * bestMoves.length)];
-    }
 
-    return null;
-}
+            function aiMove() {
+                if (isGameOver) return;
+                statusText.textContent = `Думает ${aiPlayer}...`;
+                requestAnimationFrame(() => {
+                    const movesMade = boardState.flat().filter(cell => cell !== null).length;
+                    if (boardSize === 3 && movesMade <= 1) {
+                        const emptyCells = [];
+                        for (let i = 0; i < boardSize; i++) {
+                            for (let j = 0; j < boardSize; j++) {
+                                if (boardState[i][j] === null) emptyCells.push({ row: i, col: j });
+                            }
+                        }
+                        if (emptyCells.length > 0) {
+                            const randomMove = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                            makeMove(randomMove.row, randomMove.col, aiPlayer);
+                        }
+                    } else {
+                        const bestMove = findBestMove();
+                        if (bestMove) {
+                            makeMove(bestMove.row, bestMove.col, aiPlayer);
+                        }
+                    }
+                    const winInfo = checkWin(aiPlayer);
+                    if (winInfo) {
+                        endGame(false, winInfo.line);
+                    } else if (isBoardFull()) {
+                        endGame(true, null);
+                    } else {
+                        switchPlayer();
+                    }
+                });
+            }
+
+            function findBestMove() {
+                let bestVal = -Infinity;
+                let bestMoves = [];
+                for (let i = 0; i < boardSize; i++) {
+                    for (let j = 0; j < boardSize; j++) {
+                        if (boardState[i][j] === null) {
+                            boardState[i][j] = aiPlayer;
+                            let moveVal = minimax(0, false, -Infinity, Infinity);
+                            boardState[i][j] = null;
+                            if (moveVal > bestVal) {
+                                bestVal = moveVal;
+                                bestMoves = [{ row: i, col: j }];
+                            } else if (moveVal === bestVal) {
+                                bestMoves.push({ row: i, col: j });
+                            }
+                        }
+                    }
+                }
+                if (bestMoves.length > 0) {
+                    return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+                }
+                return null;
+            }
             
-function minimax(depth, isMaximizing, alpha, beta) {
-    const score = evaluate();
-    if (score > 1000  score < -1000  isBoardFull() || depth > getSearchDepth()) {
-        if (score > 1000) return score - depth;
-        if (score < -1000) return score + depth;
-        return 0;
-    }
-    
-    if (isMaximizing) {
-        let best = -Infinity;
-        for (let i = 0; i < boardSize; i++) {
-            for (let j = 0; j < boardSize; j++) {
-                if (boardState[i][j] === null) {
-                    boardState[i][j] = aiPlayer;
-                    best = Math.max(best, minimax(depth + 1, !isMaximizing, alpha, beta));
-                    boardState[i][j] = null;
-                    alpha = Math.max(alpha, best);
-                    if (beta <= alpha) break;
+            function minimax(depth, isMaximizing, alpha, beta) {
+                const score = evaluate();
+                if (score > 1000 || score < -1000 || isBoardFull() || depth > getSearchDepth()) {
+                    if (score > 1000) return score - depth;
+                    if (score < -1000) return score + depth;
+                    return 0;
+                }
+                if (isMaximizing) {
+                    let best = -Infinity;
+                    for (let i = 0; i < boardSize; i++) {
+                        for (let j = 0; j < boardSize; j++) {
+                            if (boardState[i][j] === null) {
+                                boardState[i][j] = aiPlayer;
+                                best = Math.max(best, minimax(depth + 1, !isMaximizing, alpha, beta));
+                                boardState[i][j] = null;
+                                alpha = Math.max(alpha, best);
+                                if (beta <= alpha) break;
+                            }
+                        }
+                        if (beta <= alpha) break;
+                    }
+                    return best;
+                } else {
+                    let best = Infinity;
+                    for (let i = 0; i < boardSize; i++) {
+                        for (let j = 0; j < boardSize; j++) {
+                            if (boardState[i][j] === null) {
+                                boardState[i][j] = humanPlayer;
+                                best = Math.min(best, minimax(depth + 1, !isMaximizing, alpha, beta));
+                                boardState[i][j] = null;
+                                beta = Math.min(beta, best);
+                                if (beta <= alpha) break;
+                            }
+                        }
+                        if (beta <= alpha) break;
+                    }
+                    return best;
                 }
             }
-             if (beta <= alpha) break;
-        }
-        return best;
-    } else {
-        let best = Infinity;
-        for (let i = 0; i < boardSize; i++) {
-            for (let j = 0; j < boardSize; j++) {
-                if (boardState[i][j] === null) {
-                    boardState[i][j] = humanPlayer;
-                    best = Math.min(best, minimax(depth + 1, !isMaximizing, alpha, beta));
-                    boardState[i][j] = null;
-                    beta = Math.min(beta, best);
-                    if (beta <= alpha) break;
-                }
+
+            function getSearchDepth() {
+                if (boardSize === 3) return 9;
+                if (boardSize === 4) return 4;
+                return 3;
             }
-             if (beta <= alpha) break;
-        }
-        return best;
-    }
-}
 
-function getSearchDepth() {
-    if (boardSize === 3) return 9;
-    if (boardSize === 4) return 4;
-    return 3; // Для 5x5 глубина 3 достаточна с хорошей эвристикой
-}
-
-
-function evaluate() {
-    const winLength = getWinLength();
-    let totalScore = 0;
-
-    const evaluateLine = (line) => {
-        let aiPieces = 0;
-        let humanPieces = 0;
-        let empty = 0;
-        for(const cell of line) {
-            if (cell === aiPlayer) aiPieces++;
-            else if (cell === humanPlayer) humanPieces++;
-            else empty++;
-        }
-        
-        // Оцениваем только линии, где может победить один из игроков
-        if (aiPieces > 0 && humanPieces > 0) return 0;
-
-        if (aiPieces === winLength) return 10000; // Победа ИИ
-        if (humanPieces === winLength) return -50000; // Победа игрока (блокировать важнее)
-        
-        let score = 0;
-        if (aiPieces === winLength - 1 && empty === 1) score += 500; // ИИ почти победил
-        if (humanPieces === winLength - 1 && empty === 1) score -= 1000; // Игрок почти победил, срочно блокировать
-        
-        if (aiPieces === winLength - 2 && empty === 2) score += 50; // Открытая линия для ИИ (для создания вилок)
-        if (humanPieces === winLength - 2 && empty === 2) score -= 100; // Открытая линия игрока (для блокировки вилок)
-
-        return score;
-    }
-    
-    // Прогоняем оценку по всем возможным линиям
-    for (let i = 0; i < boardSize; i++) {
-        // Строки и столбцы
-        const row = boardState[i];
-        const col = boardState.map(r => r[i]);
-        for(let j = 0; j <= boardSize - winLength; j++){
-            totalScore += evaluateLine(row.slice(j, j + winLength));
-            totalScore += evaluateLine(col.slice(j, j + winLength));
-        }
-    }
-    // Диагонали (упрощенная проверка для производительности)
-    // ... (полная проверка диагоналей для эвристики может быть очень медленной,
-    // но для текущей задачи основной логики строк/столбцов достаточно для "умного" поведения)
-
-    // Проверяем на терминальное состояние в конце
-    if (checkWin(aiPlayer)) return 10000;
-    if (checkWin(humanPlayer)) return -50000;
-
-    return totalScore;
-}
-
+            function evaluate() {
+                const winLength = getWinLength();
+                let totalScore = 0;
+                const evaluateLine = (line) => {
+                    let aiPieces = 0;
+                    let humanPieces = 0;
+                    let empty = 0;
+                    for(const cell of line) {
+                        if (cell === aiPlayer) aiPieces++;
+                        else if (cell === humanPlayer) humanPieces++;
+                        else empty++;
+                    }
+                    if (aiPieces > 0 && humanPieces > 0) return 0;
+                    if (aiPieces === winLength) return 10000;
+                    if (humanPieces === winLength) return -50000;
+                    let score = 0;
+                    if (aiPieces === winLength - 1 && empty === 1) score += 500;
+                    if (humanPieces === winLength - 1 && empty === 1) score -= 1000;
+                    if (aiPieces === winLength - 2 && empty === 2) score += 50;
+                    if (humanPieces === winLength - 2 && empty === 2) score -= 100;
+                    return score;
+                }
+                for (let i = 0; i < boardSize; i++) {
+                    const row = boardState[i];
+                    const col = boardState.map(r => r[i]);
+                    for(let j = 0; j <= boardSize - winLength; j++){
+                        totalScore += evaluateLine(row.slice(j, j + winLength));
+                        totalScore += evaluateLine(col.slice(j, j + winLength));
+                    }
+                }
+                if (checkWin(aiPlayer)) return 10000;
+                if (checkWin(humanPlayer)) return -50000;
+                return totalScore;
+            }
         });
     </script>
 
