@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no, user-scalable=no, viewport-fit=cover">
-    <title>Tic-Tac-Toe for VK</title>
+    <title>Tic-Tac-Toe for VK / OK</title>
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    <!-- OK SDK может быть подключён платформой автоматически в iframe; если нужно, можно подключить внешний скрипт -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
@@ -22,19 +23,8 @@
             --board-size: 3;
             --cell-gap: 10px;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; width: 100%; overflow: hidden; }
         body {
             font-family: 'Montserrat', sans-serif;
             background-color: var(--bg-color);
@@ -43,253 +33,47 @@
             justify-content: center;
             align-items: center;
         }
-
-        .container {
-            width: 100%;
-            max-width: 500px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* --- Main Menu --- */
-        .main-menu {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-            text-align: center;
-            width: 100%;
-            transition: opacity var(--transition-speed), transform var(--transition-speed);
-        }
-
-        .main-menu.hidden, .game-screen.hidden {
-            display: none;
-        }
-
-        .title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            letter-spacing: 2px;
-            background: linear-gradient(90deg, var(--x-color), var(--o-color));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 20px;
-        }
-
-        .menu-section {
-            background-color: var(--primary-color);
-            padding: 20px;
-            border-radius: var(--border-radius);
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .menu-section h3 {
-            font-size: 1.2rem;
-            border-bottom: 2px solid var(--secondary-color);
-            padding-bottom: 10px;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            width: 100%;
-        }
-
-        .btn {
-            flex-grow: 1;
-            padding: 15px 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            background-color: var(--secondary-color);
-            color: var(--text-color);
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color var(--transition-speed), transform var(--transition-speed);
-            border: 2px solid transparent;
-        }
-
-        .btn:hover {
-            transform: translateY(-3px);
-            background-color: #4a4a4a;
-        }
-
-        .btn.active {
-            background-color: var(--accent-color);
-            color: var(--bg-color);
-            border-color: var(--accent-color);
-        }
-
-        .start-btn {
-            padding: 18px;
-            font-size: 1.2rem;
-            font-weight: 700;
-            background: linear-gradient(90deg, var(--x-color), var(--o-color));
-            color: var(--text-color);
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: transform var(--transition-speed), box-shadow var(--transition-speed);
-            margin-top: 10px;
-        }
-
-        .start-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(0, 217, 255, 0.5), 0 0 20px rgba(255, 0, 127, 0.5);
-        }
-
-        #stats-display {
-            font-size: 0.9rem;
-            color: #aaa;
-            margin-top: 10px;
-        }
-        
-        /* --- Game Screen --- */
-        .game-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-            width: 100%;
-            max-width: 500px;
-        }
-        
-        .game-header {
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        #status-text {
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-
-        #pause-btn {
-            background: none;
-            border: none;
-            color: var(--text-color);
-            font-size: 1.8rem;
-            cursor: pointer;
-            transition: color var(--transition-speed);
-        }
-        #pause-btn:hover {
-            color: var(--accent-color);
-        }
-
-        #board {
-            display: grid;
-            grid-template-columns: repeat(var(--board-size), 1fr);
-            gap: var(--cell-gap);
-            width: 100%;
-            background-color: var(--primary-color);
-            padding: var(--cell-gap);
-            border-radius: var(--border-radius);
-        }
-
-        .cell {
-            aspect-ratio: 1 / 1;
-            background-color: var(--secondary-color);
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: background-color var(--transition-speed);
-        }
-        
-        .cell:not(.x):not(.o):hover {
-            background-color: #4a4a4a;
-        }
-
-        .cell.x, .cell.o {
-            cursor: not-allowed;
-            font-size: min(10vw, calc(300px / var(--board-size) * 0.7));
-            font-weight: 700;
-            line-height: 1;
-        }
-        
+        .container { width: 100%; max-width: 500px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .main-menu { display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; width: 100%; transition: opacity var(--transition-speed), transform var(--transition-speed); }
+        .main-menu.hidden, .game-screen.hidden { display: none; }
+        .title { font-size: 2.5rem; font-weight: 700; letter-spacing: 2px; background: linear-gradient(90deg, var(--x-color), var(--o-color)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; }
+        .menu-section { background-color: var(--primary-color); padding: 20px; border-radius: var(--border-radius); width: 100%; display: flex; flex-direction: column; gap: 15px; }
+        .menu-section h3 { font-size: 1.2rem; border-bottom: 2px solid var(--secondary-color); padding-bottom: 10px; margin-bottom: 5px; font-weight: 600; }
+        .btn-group { display: flex; gap: 10px; width: 100%; }
+        .btn { flex-grow: 1; padding: 15px 10px; font-size: 1rem; font-weight: 600; background-color: var(--secondary-color); color: var(--text-color); border: none; border-radius: 8px; cursor: pointer; transition: background-color var(--transition-speed), transform var(--transition-speed); border: 2px solid transparent; }
+        .btn:hover { transform: translateY(-3px); background-color: #4a4a4a; }
+        .btn.active { background-color: var(--accent-color); color: var(--bg-color); border-color: var(--accent-color); }
+        .start-btn { padding: 18px; font-size: 1.2rem; font-weight: 700; background: linear-gradient(90deg, var(--x-color), var(--o-color)); color: var(--text-color); border: none; border-radius: 8px; cursor: pointer; transition: transform var(--transition-speed), box-shadow var(--transition-speed); margin-top: 10px; }
+        .start-btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 217, 255, 0.5), 0 0 20px rgba(255, 0, 127, 0.5); }
+        #stats-display { font-size: 0.9rem; color: #aaa; margin-top: 10px; }
+        .game-screen { display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; max-width: 500px; }
+        .game-header { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+        #status-text { font-size: 1.5rem; font-weight: 600; }
+        #pause-btn { background: none; border: none; color: var(--text-color); font-size: 1.8rem; cursor: pointer; transition: color var(--transition-speed); }
+        #pause-btn:hover { color: var(--accent-color); }
+        #board { display: grid; grid-template-columns: repeat(var(--board-size), 1fr); gap: var(--cell-gap); width: 100%; background-color: var(--primary-color); padding: var(--cell-gap); border-radius: var(--border-radius); }
+        .cell { aspect-ratio: 1 / 1; background-color: var(--secondary-color); border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: background-color var(--transition-speed); }
+        .cell:not(.x):not(.o):hover { background-color: #4a4a4a; }
+        .cell.x, .cell.o { cursor: not-allowed; font-size: min(10vw, calc(300px / var(--board-size) * 0.7)); font-weight: 700; line-height: 1; }
         .cell.x { color: var(--x-color); }
         .cell.o { color: var(--o-color); }
-        
-        /* --- Overlay Styles --- */
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(26, 26, 26, 0.8);
-            backdrop-filter: blur(5px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity var(--transition-speed);
-            z-index: 1000;
-        }
-
-        .overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        
-        .overlay-content {
-            background-color: var(--primary-color);
-            padding: 40px;
-            border-radius: var(--border-radius);
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            transform: scale(0.9);
-            transition: transform var(--transition-speed);
-        }
-        
-        .overlay.active .overlay-content {
-            transform: scale(1);
-        }
-
-        .overlay-content h2 {
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
-        
-        .overlay-content .btn-group {
-            flex-direction: column;
-        }
-
-        /* Responsive Design */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(26, 26, 26, 0.8); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity var(--transition-speed); z-index: 1000; }
+        .overlay.active { opacity: 1; pointer-events: auto; }
+        .overlay-content { background-color: var(--primary-color); padding: 40px; border-radius: var(--border-radius); text-align: center; display: flex; flex-direction: column; gap: 20px; transform: scale(0.9); transition: transform var(--transition-speed); }
+        .overlay.active .overlay-content { transform: scale(1); }
+        .overlay-content h2 { font-size: 2rem; margin-bottom: 10px; }
+        .overlay-content .btn-group { flex-direction: column; }
         @media (max-width: 500px) {
-            :root {
-                --cell-gap: 5px;
-            }
+            :root { --cell-gap: 5px; }
             .title { font-size: 2rem; }
             #status-text { font-size: 1.2rem; }
-            .btn { padding: 12px 8px; font-size: 0.9rem;}
+            .btn { padding: 12px 8px; font-size: 0.9rem; }
             .start-btn { padding: 15px; font-size: 1.1rem; }
             .overlay-content { padding: 30px; width: calc(100% - 40px); }
             .overlay-content h2 { font-size: 1.8rem; }
         }
-        .cell.win {
-            background-color: var(--accent-color) !important;
-            transform: scale(1.1);
-            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
-        }
-        .cell.win.x, .cell.win.o {
-            color: var(--primary-color);
-        }
+        .cell.win { background-color: var(--accent-color) !important; transform: scale(1.1); transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out; }
+        .cell.win.x, .cell.win.o { color: var(--primary-color); }
     </style>
 </head>
 <body>
@@ -346,517 +130,703 @@
         </div>
     </div>
 
-
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            // === DOM Elements and State ===
-            const mainMenu = document.getElementById('main-menu');
-            const gameScreen = document.getElementById('game-screen');
-            const boardElement = document.getElementById('board');
-            const statusText = document.getElementById('status-text');
-            const pauseBtn = document.getElementById('pause-btn');
-            const pauseOverlay = document.getElementById('pause-overlay');
-            const gameOverOverlay = document.getElementById('game-over-overlay');
-            const statsDisplay = document.getElementById('stats-display');
+    document.addEventListener('DOMContentLoaded', async () => {
+        // === DOM Elements and State ===
+        const mainMenu = document.getElementById('main-menu');
+        const gameScreen = document.getElementById('game-screen');
+        const boardElement = document.getElementById('board');
+        const statusText = document.getElementById('status-text');
+        const pauseBtn = document.getElementById('pause-btn');
+        const pauseOverlay = document.getElementById('pause-overlay');
+        const gameOverOverlay = document.getElementById('game-over-overlay');
+        const statsDisplay = document.getElementById('stats-display');
 
-            let boardSize = 3;
-            let gameMode = 'pvc';
-            let currentPlayer = 'X';
-            let boardState = [];
-            let isGameOver = false;
-            let isPaused = false;
-            let humanPlayer = 'X';
-            let aiPlayer = 'O';
-            let whoStartsNext = 'X'; 
-            let stats = { wins: 0, losses: 0, ties: 0, gamesPlayedSinceAd: 0 };
+        let boardSize = 3;
+        let gameMode = 'pvc';
+        let currentPlayer = 'X';
+        let boardState = [];
+        let isGameOver = false;
+        let isPaused = false;
+        let humanPlayer = 'X';
+        let aiPlayer = 'O';
+        let whoStartsNext = 'X';
+        let stats = { wins: 0, losses: 0, ties: 0, gamesPlayedSinceAd: 0 };
 
-            // === VK Integration ===
-            const APP_ID = 53865837;
-            const STATS_VK_KEY_PREFIX = 'ticTacToeStats';
-            const STATS_LOCAL_KEY = 'ticTacToeLocalSave';
+        // === App constants ===
+        const APP_ID = 53865837;
+        const STATS_VK_KEY_PREFIX = 'ticTacToeStats';
+        const STATS_LOCAL_KEY = 'ticTacToeLocalSave';
 
-            let vkUser = null;
-            let vkUserId = null;
-            let vkAccessToken = null;
-            
-        async function initVK() {
+        // === Platform / user detection + storage layer ===
+        let platformInfo = { platform: 'web', userId: null, storageKey: null };
+
+        /**
+         * initPlatform - пытаемся определить окружение (vk / ok / web), получить userId и сформировать ключ storage.
+         * Метод универсален: поддерживает VK Bridge, OK FAPI (несколько вариантов), fallback -> web guest.
+         */
+        async function initPlatform() {
+            // 1) VK detection via vkBridge (vk-bridge)
+            if (window.vkBridge || window.VKBridge || window.VKWebApp) {
+                // vkBridge встраивается как vkBridge (в некоторых сборках window.VKBridge/ vkBridge)
+                platformInfo.platform = 'vk';
+                try {
+                    // Инициализируем bridge (немного безопаснее повторно вызывать)
+                    await (window.vkBridge || window.VKBridge).send('VKWebAppInit', {});
+                    const userInfo = await (window.vkBridge || window.VKBridge).send('VKWebAppGetUserInfo');
+                    if (userInfo && userInfo.id) {
+                        platformInfo.userId = `vk_${userInfo.id}`;
+                        platformInfo.storageKey = `${STATS_VK_KEY_PREFIX}_${userInfo.id}`;
+                    }
+                } catch (e) {
+                    console.warn('VK init failed or missing permissions:', e);
+                    // оставляем как vk без userId — load/save будут fallback'иться на localStorage
+                }
+                return platformInfo;
+            }
+
+            // 2) OK detection - несколько возможных способов: FAPI.Client.call, FAPI.invoke, OK global params
+            // Попробуем наиболее распространённый: FAPI.Client.call('users.getLoggedUser')
+            if (window.FAPI && (typeof window.FAPI.Client === 'object' || typeof window.FAPI.Client === 'function')) {
+                platformInfo.platform = 'ok';
+                try {
+                    // FAPI.Client.call signature: FAPI.Client.call({ method: 'users.getLoggedUser' }, callback)
+                    await new Promise((resolve) => {
+                        try {
+                            // Некоторые интеграции возвращают ответ в виде объекта, другие через cb
+                            window.FAPI.Client.call({ method: 'users.getLoggedUser' }, (res) => {
+                                if (res && (res.uid || res.id)) {
+                                    const uid = res.uid || res.id;
+                                    platformInfo.userId = `ok_${uid}`;
+                                    platformInfo.storageKey = `ticTacToeStats_ok_${uid}`;
+                                }
+                                resolve();
+                            });
+                        } catch (err) {
+                            // если вызов синхронно падает — просто resolve
+                            console.warn('FAPI.Client.call error:', err);
+                            resolve();
+                        }
+                    });
+                } catch (e) {
+                    console.warn('OK FAPI.Client.call failed:', e);
+                }
+                // если userId всё ещё пуст — попытаемся использовать FAPI.invoke или другие способы
+                if (!platformInfo.userId && window.FAPI && typeof window.FAPI.invoke === 'function') {
+                    try {
+                        await new Promise((resolve) => {
+                            try {
+                                window.FAPI.invoke('users.getLoggedUser', {}, (res) => {
+                                    if (res && (res.uid || res.id)) {
+                                        const uid = res.uid || res.id;
+                                        platformInfo.userId = `ok_${uid}`;
+                                        platformInfo.storageKey = `ticTacToeStats_ok_${uid}`;
+                                    }
+                                    resolve();
+                                });
+                            } catch (err) {
+                                console.warn('FAPI.invoke(users.getLoggedUser) error:', err);
+                                resolve();
+                            }
+                        });
+                    } catch (e) {
+                        console.warn('FAPI.invoke error:', e);
+                    }
+                }
+                // There is still a chance OK gives user info via global init params (window.parent frame etc.)
+                return platformInfo;
+            }
+
+            // 3) Try to detect OK via URL params or parent frame (some platforms put signed params)
             try {
-                await vkBridge.send('VKWebAppInit', {});
-                const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
-                vkUser = userInfo;
-                vkUserId = userInfo.id;
-                const tokenData = await vkBridge.send('VKWebAppGetAuthToken', {
-                    app_id: APP_ID,
-                    scope: 'storage'
-                });
-                vkAccessToken = tokenData.access_token;
-                await loadStats();
-                console.log('VK Bridge инициализирован');
-            } catch (error) {
-                console.error('Ошибка инициализации VK Bridge:', error);
-                loadLocalStats();
+                const params = new URLSearchParams(window.location.search);
+                // ok.ru sometimes passes "auth_key" and "logged_user_id" or "uid" — we check common ones
+                const maybeOkUid = params.get('logged_user_id') || params.get('uid') || params.get('user_id');
+                if (maybeOkUid) {
+                    platformInfo.platform = 'ok';
+                    platformInfo.userId = `ok_${maybeOkUid}`;
+                    platformInfo.storageKey = `ticTacToeStats_ok_${maybeOkUid}`;
+                    return platformInfo;
+                }
+            } catch (e) { /* ignore */ }
+
+            // fallback: web guest
+            platformInfo.platform = 'web';
+            platformInfo.userId = null;
+            platformInfo.storageKey = null;
+            return platformInfo;
+        }
+
+        // Wrapper: UnifiedStorage that uses platformInfo to save/load
+        const UnifiedStorage = {
+            async save(dataObj) {
+                const dataString = JSON.stringify(dataObj);
+                // local fallback always saved
+                try { localStorage.setItem(STATS_LOCAL_KEY, dataString); } catch(e){ console.warn('localStorage save failed', e); }
+
+                if (platformInfo.platform === 'vk' && (window.vkBridge || window.VKBridge)) {
+                    try {
+                        await (window.vkBridge || window.VKBridge).send('VKWebAppStorageSet', {
+                            key: platformInfo.storageKey || `${STATS_VK_KEY_PREFIX}_${(platformInfo.userId||'unknown')}`,
+                            value: dataString
+                        });
+                        console.log('Saved to VK Storage');
+                    } catch (e) {
+                        console.warn('VK storage set failed', e);
+                    }
+                } else if (platformInfo.platform === 'ok') {
+                    // OK: try FAPI.invoke('storage.set') or FAPI.Client.call fallback
+                    try {
+                        if (window.FAPI && typeof window.FAPI.invoke === 'function' && platformInfo.storageKey) {
+                            // FAPI.invoke may accept callback or return promise depending on integration
+                            await new Promise((resolve) => {
+                                try {
+                                    window.FAPI.invoke('storage.set', { key: platformInfo.storageKey, value: dataString }, (res) => {
+                                        // res may be undefined; just resolve
+                                        console.log('Attempted OK storage.set', res);
+                                        resolve();
+                                    });
+                                } catch (err) {
+                                    console.warn('FAPI.invoke(storage.set) error', err);
+                                    resolve();
+                                }
+                            });
+                        } else if (window.FAPI && window.FAPI.Client && platformInfo.storageKey) {
+                            // Some older OK integrations use FAPI.Client.call with method 'storage.set'
+                            await new Promise((resolve) => {
+                                try {
+                                    window.FAPI.Client.call({ method: 'storage.set', key: platformInfo.storageKey, value: dataString }, (res) => {
+                                        console.log('Attempted OK Client storage.set', res);
+                                        resolve();
+                                    });
+                                } catch (err) {
+                                    console.warn('FAPI.Client.call(storage.set) error', err);
+                                    resolve();
+                                }
+                            });
+                        } else {
+                            console.warn('OK storage not available to set.');
+                        }
+                    } catch (e) {
+                        console.warn('OK storage set failed', e);
+                    }
+                }
+            },
+
+            async load() {
+                // 1) Try platform storage
+                if (platformInfo.platform === 'vk' && (window.vkBridge || window.VKBridge) && platformInfo.storageKey) {
+                    try {
+                        const resp = await (window.vkBridge || window.VKBridge).send('VKWebAppStorageGet', { keys: [platformInfo.storageKey] });
+                        const val = resp.keys && resp.keys[0] && resp.keys[0].value;
+                        if (val) {
+                            try { return JSON.parse(val); } catch(e){ console.warn('parse vk val failed', e); }
+                        }
+                    } catch (e) {
+                        console.warn('VK storage get failed', e);
+                    }
+                } else if (platformInfo.platform === 'ok' && platformInfo.storageKey) {
+                    try {
+                        // Try FAPI.invoke('storage.get')
+                        if (window.FAPI && typeof window.FAPI.invoke === 'function') {
+                            const result = await new Promise((resolve) => {
+                                try {
+                                    window.FAPI.invoke('storage.get', { key: platformInfo.storageKey }, (res) => {
+                                        resolve(res);
+                                    });
+                                } catch (err) {
+                                    console.warn('FAPI.invoke(storage.get) error', err);
+                                    resolve(null);
+                                }
+                            });
+                            if (result && result.value) {
+                                try { return JSON.parse(result.value); } catch(e){ console.warn('parse ok value failed', e); }
+                            }
+                        }
+                        // Fallback: FAPI.Client.call
+                        if (window.FAPI && window.FAPI.Client) {
+                            const result2 = await new Promise((resolve) => {
+                                try {
+                                    window.FAPI.Client.call({ method: 'storage.get', key: platformInfo.storageKey }, (res) => {
+                                        resolve(res);
+                                    });
+                                } catch (err) {
+                                    console.warn('FAPI.Client.call(storage.get) error', err);
+                                    resolve(null);
+                                }
+                            });
+                            if (result2 && result2.value) {
+                                try { return JSON.parse(result2.value); } catch(e){ console.warn('parse ok client value failed', e); }
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('OK storage get failed', e);
+                    }
+                }
+
+                // 2) fallback to localStorage
+                try {
+                    const local = localStorage.getItem(STATS_LOCAL_KEY);
+                    if (local) {
+                        return JSON.parse(local);
+                    }
+                } catch (e) {
+                    console.warn('localStorage read failed', e);
+                }
+                // 3) nothing found
+                return null;
+            }
+        };
+
+        // Инициализация платформы и VK (если есть) + загрузка статистики
+        await initPlatform();
+
+        // Если платформа VK и vkBridge доступен, инициализируем и получаем auth token по необходимости
+        let vkAccessToken = null;
+        async function initVKIfNeeded() {
+            try {
+                if (platformInfo.platform === 'vk' && (window.vkBridge || window.VKBridge)) {
+                    // Инициализация bridge уже была попытана в initPlatform, но сделаем ещё раз безопасно
+                    await (window.vkBridge || window.VKBridge).send('VKWebAppInit', {});
+                    // пытаемся получить токен только если нужен scope storage (можно пропустить, если не требуется)
+                    try {
+                        const tokenData = await (window.vkBridge || window.VKBridge).send('VKWebAppGetAuthToken', {
+                            app_id: APP_ID,
+                            scope: 'storage'
+                        });
+                        vkAccessToken = tokenData && tokenData.access_token ? tokenData.access_token : null;
+                    } catch (e) {
+                        // не критично
+                        console.info('VK auth token not obtained (maybe no permission).', e);
+                    }
+                }
+            } catch (e) { console.warn('initVKIfNeeded error', e); }
+        }
+
+        await initVKIfNeeded();
+
+        // === saveStats / loadStats adapted to unified storage ===
+        async function saveStats() {
+            const dataToSave = {
+                stats: stats,
+                lastUpdated: Date.now(),
+                syncVersion: 1
+            };
+            try {
+                await UnifiedStorage.save(dataToSave);
+            } catch (e) {
+                console.warn('UnifiedStorage.save failed', e);
             }
         }
-        await initVK();
-            
-            async function saveStats() {
-                const dataToSave = {
-                    stats: stats,
-                    lastUpdated: Date.now(),
-                    syncVersion: 1
-                };
-                const dataString = JSON.stringify(dataToSave);
-                localStorage.setItem(STATS_LOCAL_KEY, dataString);
-                if (vkUserId) {
-                    try {
-                        await vkBridge.send('VKWebAppStorageSet', {
-                            key: `${STATS_VK_KEY_PREFIX}_${vkUserId}`,
-                            value: dataString,
-                        });
-                        console.log("Статистика сохранена в VK Storage.");
-                    } catch (err) {
-                        console.error('Ошибка сохранения в VK Storage:', err);
-                    }
-                }
-            }
-            
-            async function loadStats() {
-                if (!vkUserId) {
-                    loadLocalStats();
-                    updateStatsDisplay();
-                    return;
-                }
-                try {
-                    const response = await vkBridge.send('VKWebAppStorageGet', {
-                        keys: [`${STATS_VK_KEY_PREFIX}_${vkUserId}`]
-                    });
-                    if (response.keys[0]?.value) {
-                        const cloudData = JSON.parse(response.keys[0].value);
-                        if (cloudData.syncVersion === 1 && cloudData.stats) {
-                            stats = cloudData.stats;
-                            console.log("Статистика загружена из VK Storage.");
-                            updateStatsDisplay();
-                            return;
-                        }
-                    }
-                    loadLocalStats();
-                    updateStatsDisplay();
-                } catch (err) {
-                    console.error('Ошибка загрузки из VK Storage:', err);
-                    loadLocalStats();
-                    updateStatsDisplay();
-                }
-            }
-            
-            function loadLocalStats() {
-                const localData = localStorage.getItem(STATS_LOCAL_KEY);
-                if (localData) {
-                    try {
-                        const parsedData = JSON.parse(localData);
-                        if (parsedData.stats) {
-                           stats = parsedData.stats;
-                           console.log("Статистика загружена из localStorage.");
-                        }
-                    } catch {
-                        console.error("Ошибка парсинга локальных данных.");
-                    }
-                }
-            }
- 
-            async function validateSignature(params) {
-                const sign = params.get('sign');
-                const checkParams = new URLSearchParams();
-                params.forEach((value, key) => {
-                    if (key !== 'sign') checkParams.set(key, value);
-                });
-                const isValid = await vkBridge.send('VKWebAppVerifyMessage', {
-                    message: checkParams.toString(),
-                    signature: sign
-                });
-                if (!isValid) throw new Error('Invalid signature');
-            }
 
-            function showBannerAd() {
-                vkBridge.send("VKWebAppShowBannerAd").catch(e => console.error(e));
+        async function loadStats() {
+            try {
+                const cloudData = await UnifiedStorage.load();
+                if (cloudData && cloudData.stats) {
+                    stats = cloudData.stats;
+                    console.log('Статистика загружена из облака/локала');
+                } else {
+                    console.log('Нет облачных данных, используем локальные (если есть)');
+                }
+                updateStatsDisplay();
+            } catch (e) {
+                console.warn('loadStats error', e);
+                updateStatsDisplay();
             }
+        }
 
-            function hideBannerAd() {
-                vkBridge.send("VKWebAppHideBannerAd").catch(e => console.error(e));
+        // Try load at start
+        await loadStats();
+
+        // === rest of original VK-specific utilities preserved ===
+        function validateSignature(params) {
+            // Оставим заготовку; проверка подписи делалась через VKBridge ранее в оригинале.
+            // Если нужно, можно оставить вызов VKWebAppVerifyMessage аналогично старому коду.
+        }
+
+        function showBannerAd() {
+            if (window.vkBridge || window.VKBridge) {
+                (window.vkBridge || window.VKBridge).send("VKWebAppShowBannerAd").catch(e => console.error(e));
             }
+        }
 
-            vkBridge.subscribe((e) => {
-                if (e.detail.type === 'VKWebAppBannerAdUpdated') {
+        function hideBannerAd() {
+            if (window.vkBridge || window.VKBridge) {
+                (window.vkBridge || window.VKBridge).send("VKWebAppHideBannerAd").catch(e => console.error(e));
+            }
+        }
+
+        if (window.vkBridge || window.VKBridge) {
+            (window.vkBridge || window.VKBridge).subscribe((e) => {
+                if (e.detail?.type === 'VKWebAppBannerAdUpdated') {
                     console.log('Баннерная реклама обновлена:', e);
-                } else if (e.detail.type === 'VKWebAppBannerAdClosedByUser') {
+                } else if (e.detail?.type === 'VKWebAppBannerAdClosedByUser') {
                     console.log('Пользователь закрыл рекламу:', e);
                 }
             });
+        }
 
-            // === Event Listeners ===
-            document.getElementById('board-size-selector').addEventListener('click', (e) => {
-                if (e.target.classList.contains('btn')) {
-                    handleSelector(e.target, '#board-size-selector');
-                    boardSize = parseInt(e.target.dataset.size);
-                }
-            });
-            document.getElementById('game-mode-selector').addEventListener('click', (e) => {
-                if (e.target.classList.contains('btn')) {
-                    handleSelector(e.target, '#game-mode-selector');
-                    gameMode = e.target.dataset.mode;
-                }
-            });
-            document.getElementById('start-game-btn').addEventListener('click', startGame);
-            pauseBtn.addEventListener('click', togglePause);
-            document.getElementById('resume-btn').addEventListener('click', togglePause);
-            document.getElementById('restart-pause-btn').addEventListener('click', () => {
-                togglePause();
-                startGame();
-            });
-            document.getElementById('menu-pause-btn').addEventListener('click', () => {
-                togglePause();
-                showMainMenu();
-            });
-            document.getElementById('restart-game-over-btn').addEventListener('click', () => {
-                hideOverlay(gameOverOverlay);
-                startGame();
-            });
-            document.getElementById('menu-game-over-btn').addEventListener('click', () => {
-                hideOverlay(gameOverOverlay);
-                showMainMenu();
-            });
-
-            // === Core Game Functions ===
-            function handleSelector(target, parentSelector) {
-                document.querySelectorAll(`${parentSelector} .btn`).forEach(btn => btn.classList.remove('active'));
-                target.classList.add('active');
+        // === Event Listeners ===
+        document.getElementById('board-size-selector').addEventListener('click', (e) => {
+            if (e.target.classList.contains('btn')) {
+                handleSelector(e.target, '#board-size-selector');
+                boardSize = parseInt(e.target.dataset.size);
             }
+        });
+        document.getElementById('game-mode-selector').addEventListener('click', (e) => {
+            if (e.target.classList.contains('btn')) {
+                handleSelector(e.target, '#game-mode-selector');
+                gameMode = e.target.dataset.mode;
+            }
+        });
+        document.getElementById('start-game-btn').addEventListener('click', startGame);
+        pauseBtn.addEventListener('click', togglePause);
+        document.getElementById('resume-btn').addEventListener('click', togglePause);
+        document.getElementById('restart-pause-btn').addEventListener('click', () => {
+            togglePause();
+            startGame();
+        });
+        document.getElementById('menu-pause-btn').addEventListener('click', () => {
+            togglePause();
+            showMainMenu();
+        });
+        document.getElementById('restart-game-over-btn').addEventListener('click', () => {
+            hideOverlay(gameOverOverlay);
+            startGame();
+        });
+        document.getElementById('menu-game-over-btn').addEventListener('click', () => {
+            hideOverlay(gameOverOverlay);
+            showMainMenu();
+        });
 
-            function startGame() {
-                isGameOver = false;
-                if (gameMode === 'pvc') {
-                    currentPlayer = whoStartsNext;
-                    whoStartsNext = (whoStartsNext === humanPlayer) ? aiPlayer : humanPlayer;
-                } else {
-                    currentPlayer = 'X';
-                    whoStartsNext = 'X';
+        // === Core Game Functions ===
+        function handleSelector(target, parentSelector) {
+            document.querySelectorAll(`${parentSelector} .btn`).forEach(btn => btn.classList.remove('active'));
+            target.classList.add('active');
+        }
+
+        function startGame() {
+            isGameOver = false;
+            if (gameMode === 'pvc') {
+                currentPlayer = whoStartsNext;
+                whoStartsNext = (whoStartsNext === humanPlayer) ? aiPlayer : humanPlayer;
+            } else {
+                currentPlayer = 'X';
+                whoStartsNext = 'X';
+            }
+            boardState = Array(boardSize).fill(null).map(() => Array(boardSize).fill(null));
+            boardElement.innerHTML = '';
+            boardElement.style.setProperty('--board-size', boardSize);
+            for (let i = 0; i < boardSize; i++) {
+                for (let j = 0; j < boardSize; j++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    cell.addEventListener('click', handleCellClick);
+                    boardElement.appendChild(cell);
                 }
-                boardState = Array(boardSize).fill(null).map(() => Array(boardSize).fill(null));
-                boardElement.innerHTML = '';
-                boardElement.style.setProperty('--board-size', boardSize);
-                for (let i = 0; i < boardSize; i++) {
-                    for (let j = 0; j < boardSize; j++) {
-                        const cell = document.createElement('div');
-                        cell.classList.add('cell');
-                        cell.dataset.row = i;
-                        cell.dataset.col = j;
-                        cell.addEventListener('click', handleCellClick);
-                        boardElement.appendChild(cell);
-                    }
-                }
-                statusText.textContent = `Ход ${currentPlayer}`;
-                mainMenu.classList.add('hidden');
-                gameScreen.classList.remove('hidden');
+            }
+            statusText.textContent = `Ход ${currentPlayer}`;
+            mainMenu.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            if (gameMode === 'pvc' && currentPlayer === aiPlayer) {
+                setTimeout(aiMove, 500);
+            }
+            showBannerAd();
+        }
+
+        function handleCellClick(e) {
+            if (isGameOver || isPaused) return;
+            const cell = e.target;
+            const row = cell.dataset.row;
+            const col = cell.dataset.col;
+            if (boardState[row][col] || (gameMode === 'pvc' && currentPlayer === aiPlayer)) {
+                return;
+            }
+            makeMove(row, col, currentPlayer);
+            const winInfo = checkWin(currentPlayer);
+            if (winInfo) {
+                endGame(false, winInfo.line);
+            } else if (isBoardFull()) {
+                endGame(true, null);
+            } else {
+                switchPlayer();
                 if (gameMode === 'pvc' && currentPlayer === aiPlayer) {
                     setTimeout(aiMove, 500);
                 }
-                showBannerAd();
             }
+        }
 
-            function handleCellClick(e) {
-                if (isGameOver || isPaused) return;
-                const cell = e.target;
-                const row = cell.dataset.row;
-                const col = cell.dataset.col;
-                if (boardState[row][col] || (gameMode === 'pvc' && currentPlayer === aiPlayer)) {
-                    return;
+        function makeMove(row, col, player) {
+            boardState[row][col] = player;
+            const cell = document.querySelector(`[data-row='${row}'][data-col='${col}']`);
+            cell.textContent = player;
+            cell.classList.add(player.toLowerCase());
+        }
+
+        function switchPlayer() {
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            statusText.textContent = `Ход ${currentPlayer}`;
+        }
+
+        function isBoardFull() {
+            return boardState.flat().every(cell => cell !== null);
+        }
+
+        async function endGame(isDraw, winningLine) {
+            isGameOver = true;
+            const highlightWinningLine = (line) => {
+                line.forEach(cell => {
+                    const cellElement = document.querySelector(`[data-row='${cell.row}'][data-col='${cell.col}']`);
+                    if (cellElement) {
+                        cellElement.classList.add('win');
+                    }
+                });
+            };
+            const showResult = () => {
+                const message = isDraw ? "Ничья!" : `Победил ${currentPlayer}!`;
+                document.getElementById('game-over-message').textContent = message;
+                showOverlay(gameOverOverlay);
+            };
+            if (winningLine) {
+                highlightWinningLine(winningLine);
+                setTimeout(showResult, 800);
+            } else {
+                showResult();
+            }
+            if (gameMode === 'pvc') {
+                if (isDraw) stats.ties++;
+                else if (currentPlayer === humanPlayer) stats.wins++;
+                else stats.losses++;
+            }
+            stats.gamesPlayedSinceAd = (stats.gamesPlayedSinceAd || 0) + 1;
+            await saveStats();
+            updateStatsDisplay();
+            if (stats.gamesPlayedSinceAd >= 3) {
+                try {
+                    if (window.vkBridge || window.VKBridge) {
+                        const adResult = await (window.vkBridge || window.VKBridge).send('VKWebAppShowNativeAds', { ad_format: 'interstitial' });
+                        if (adResult?.result) {
+                            stats.gamesPlayedSinceAd = 0;
+                            await saveStats();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Ошибка показа межстраничной рекламы:', error);
                 }
-                makeMove(row, col, currentPlayer);
-                const winInfo = checkWin(currentPlayer);
+            }
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            isPaused ? showOverlay(pauseOverlay) : hideOverlay(pauseOverlay);
+        }
+
+        function showOverlay(overlay) { overlay.classList.add('active'); }
+        function hideOverlay(overlay) { overlay.classList.remove('active'); }
+
+        function showMainMenu() {
+            gameScreen.classList.add('hidden');
+            mainMenu.classList.remove('hidden');
+            updateStatsDisplay();
+            showBannerAd();
+        }
+
+        function updateStatsDisplay() {
+            if (stats) {
+                statsDisplay.textContent = `Статистика (VS ИИ): Побед: ${stats.wins} | Поражений: ${stats.losses} | Ничьи: ${stats.ties}`;
+            }
+        }
+
+        // === AI Logic, Win Conditions, Helpers ===
+        function getWinLength() { return boardSize >= 4 ? 4 : 3; }
+
+        function checkWin(player) {
+            const winLength = getWinLength();
+            const checkLine = (line) => {
+                for (let i = 0; i <= line.length - winLength; i++) {
+                    const segment = line.slice(i, i + winLength);
+                    if (segment.every(cell => boardState[cell.row][cell.col] === player)) {
+                        return segment;
+                    }
+                }
+                return null;
+            };
+            for (let i = 0; i < boardSize; i++) {
+                const rowLine = Array.from({ length: boardSize }, (_, j) => ({ row: i, col: j }));
+                let win = checkLine(rowLine);
+                if (win) return { player, line: win };
+                const colLine = Array.from({ length: boardSize }, (_, j) => ({ row: j, col: i }));
+                win = checkLine(colLine);
+                if (win) return { player, line: win };
+            }
+            for (let i = 0; i <= boardSize - winLength; i++) {
+                for (let j = 0; j <= boardSize - winLength; j++) {
+                    let diag1 = [];
+                    for (let k = 0; k < boardSize; k++) {
+                        if (i + k < boardSize && j + k < boardSize) {
+                            diag1.push({ row: i + k, col: j + k });
+                        }
+                    }
+                    if (diag1.length >= winLength) {
+                        let win = checkLine(diag1);
+                        if (win) return { player, line: win };
+                    }
+                    let diag2 = [];
+                    for (let k = 0; k < boardSize; k++) {
+                        if (i + k < boardSize && (boardSize - 1 - j - k) >= 0) {
+                            diag2.push({ row: i + k, col: (boardSize - 1 - j - k) });
+                        }
+                    }
+                    if (diag2.length >= winLength) {
+                        let win = checkLine(diag2);
+                        if (win) return { player, line: win };
+                    }
+                }
+            }
+            return null;
+        }
+
+        function aiMove() {
+            if (isGameOver) return;
+            statusText.textContent = `Думает ${aiPlayer}...`;
+            requestAnimationFrame(() => {
+                const movesMade = boardState.flat().filter(cell => cell !== null).length;
+                if (boardSize === 3 && movesMade <= 1) {
+                    const emptyCells = [];
+                    for (let i = 0; i < boardSize; i++) {
+                        for (let j = 0; j < boardSize; j++) {
+                            if (boardState[i][j] === null) emptyCells.push({ row: i, col: j });
+                        }
+                    }
+                    if (emptyCells.length > 0) {
+                        const randomMove = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                        makeMove(randomMove.row, randomMove.col, aiPlayer);
+                    }
+                } else {
+                    const bestMove = findBestMove();
+                    if (bestMove) {
+                        makeMove(bestMove.row, bestMove.col, aiPlayer);
+                    }
+                }
+                const winInfo = checkWin(aiPlayer);
                 if (winInfo) {
                     endGame(false, winInfo.line);
                 } else if (isBoardFull()) {
                     endGame(true, null);
                 } else {
                     switchPlayer();
-                    if (gameMode === 'pvc' && currentPlayer === aiPlayer) {
-                        setTimeout(aiMove, 500);
+                }
+            });
+        }
+
+        function findBestMove() {
+            let bestVal = -Infinity;
+            let bestMoves = [];
+            for (let i = 0; i < boardSize; i++) {
+                for (let j = 0; j < boardSize; j++) {
+                    if (boardState[i][j] === null) {
+                        boardState[i][j] = aiPlayer;
+                        let moveVal = minimax(0, false, -Infinity, Infinity);
+                        boardState[i][j] = null;
+                        if (moveVal > bestVal) {
+                            bestVal = moveVal;
+                            bestMoves = [{ row: i, col: j }];
+                        } else if (moveVal === bestVal) {
+                            bestMoves.push({ row: i, col: j });
+                        }
                     }
                 }
             }
+            if (bestMoves.length > 0) {
+                return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+            }
+            return null;
+        }
 
-            function makeMove(row, col, player) {
-                boardState[row][col] = player;
-                const cell = document.querySelector(`[data-row='${row}'][data-col='${col}']`);
-                cell.textContent = player;
-                cell.classList.add(player.toLowerCase());
+        function minimax(depth, isMaximizing, alpha, beta) {
+            const score = evaluate();
+            if (score > 1000 || score < -1000 || isBoardFull() || depth > getSearchDepth()) {
+                if (score > 1000) return score - depth;
+                if (score < -1000) return score + depth;
+                return 0;
             }
-
-            function switchPlayer() {
-                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-                statusText.textContent = `Ход ${currentPlayer}`;
-            }
-
-            function isBoardFull() {
-                return boardState.flat().every(cell => cell !== null);
-            }
-
-            async function endGame(isDraw, winningLine) {
-                isGameOver = true;
-                const highlightWinningLine = (line) => {
-                    line.forEach(cell => {
-                        const cellElement = document.querySelector(`[data-row='${cell.row}'][data-col='${cell.col}']`);
-                        if (cellElement) {
-                            cellElement.classList.add('win');
-                        }
-                    });
-                };
-                const showResult = () => {
-                    const message = isDraw ? "Ничья!" : `Победил ${currentPlayer}!`;
-                    document.getElementById('game-over-message').textContent = message;
-                    showOverlay(gameOverOverlay);
-                };
-                if (winningLine) {
-                    highlightWinningLine(winningLine);
-                    setTimeout(showResult, 800);
-                } else {
-                    showResult();
-                }
-                if (gameMode === 'pvc') {
-                    if (isDraw) stats.ties++;
-                    else if (currentPlayer === humanPlayer) stats.wins++;
-                    else stats.losses++;
-                }
-                stats.gamesPlayedSinceAd = (stats.gamesPlayedSinceAd || 0) + 1;
-                await saveStats();
-                updateStatsDisplay();
-                if (stats.gamesPlayedSinceAd >= 3) {
-                    try {
-                        const adResult = await vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' });
-                        if(adResult.result) {
-                            stats.gamesPlayedSinceAd = 0;
-                            await saveStats();
-                        }
-                    } catch (error) {
-                        console.error('Ошибка показа межстраничной рекламы:', error);
-                    }
-                }
-            }
-            
-            function togglePause() {
-                isPaused = !isPaused;
-                isPaused ? showOverlay(pauseOverlay) : hideOverlay(pauseOverlay);
-            }
-
-            function showOverlay(overlay) {
-                overlay.classList.add('active');
-            }
-
-            function hideOverlay(overlay) {
-                overlay.classList.remove('active');
-            }
-            
-            function showMainMenu() {
-                gameScreen.classList.add('hidden');
-                mainMenu.classList.remove('hidden');
-                updateStatsDisplay();
-                showBannerAd();
-            }
-            
-            function updateStatsDisplay() {
-                if (stats) {
-                    statsDisplay.textContent = `Статистика (VS ИИ): Побед: ${stats.wins} | Поражений: ${stats.losses} | Ничьи: ${stats.ties}`;
-                }
-            }
-
-            // === AI Logic, Win Conditions, and Helpers ===
-            function getWinLength() {
-                return boardSize >= 4 ? 4 : 3;
-            }
-
-            function checkWin(player) {
-                const winLength = getWinLength();
-                const checkLine = (line) => {
-                    for (let i = 0; i <= line.length - winLength; i++) {
-                        const segment = line.slice(i, i + winLength);
-                        if (segment.every(cell => boardState[cell.row][cell.col] === player)) {
-                            return segment;
-                        }
-                    }
-                    return null;
-                };
-                for (let i = 0; i < boardSize; i++) {
-                    const rowLine = Array.from({ length: boardSize }, (_, j) => ({ row: i, col: j }));
-                    let win = checkLine(rowLine);
-                    if (win) return { player, line: win };
-                    const colLine = Array.from({ length: boardSize }, (_, j) => ({ row: j, col: i }));
-                    win = checkLine(colLine);
-                    if (win) return { player, line: win };
-                }
-                for (let i = 0; i <= boardSize - winLength; i++) {
-                    for (let j = 0; j <= boardSize - winLength; j++) {
-                        let diag1 = [];
-                        for (let k = 0; k < boardSize; k++) {
-                            if (i + k < boardSize && j + k < boardSize) {
-                                diag1.push({ row: i + k, col: j + k });
-                            }
-                        }
-                        if (diag1.length >= winLength) {
-                            let win = checkLine(diag1);
-                            if (win) return { player, line: win };
-                        }
-                        let diag2 = [];
-                         for (let k = 0; k < boardSize; k++) {
-                            if (i + k < boardSize && (boardSize - 1 - j - k) >= 0) {
-                                diag2.push({ row: i + k, col: (boardSize - 1 - j - k) });
-                            }
-                        }
-                        if(diag2.length >= winLength) {
-                            let win = checkLine(diag2);
-                            if (win) return { player, line: win };
-                        }
-                    }
-                }
-                return null;
-            }
-
-            function aiMove() {
-                if (isGameOver) return;
-                statusText.textContent = `Думает ${aiPlayer}...`;
-                requestAnimationFrame(() => {
-                    const movesMade = boardState.flat().filter(cell => cell !== null).length;
-                    if (boardSize === 3 && movesMade <= 1) {
-                        const emptyCells = [];
-                        for (let i = 0; i < boardSize; i++) {
-                            for (let j = 0; j < boardSize; j++) {
-                                if (boardState[i][j] === null) emptyCells.push({ row: i, col: j });
-                            }
-                        }
-                        if (emptyCells.length > 0) {
-                            const randomMove = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-                            makeMove(randomMove.row, randomMove.col, aiPlayer);
-                        }
-                    } else {
-                        const bestMove = findBestMove();
-                        if (bestMove) {
-                            makeMove(bestMove.row, bestMove.col, aiPlayer);
-                        }
-                    }
-                    const winInfo = checkWin(aiPlayer);
-                    if (winInfo) {
-                        endGame(false, winInfo.line);
-                    } else if (isBoardFull()) {
-                        endGame(true, null);
-                    } else {
-                        switchPlayer();
-                    }
-                });
-            }
-
-            function findBestMove() {
-                let bestVal = -Infinity;
-                let bestMoves = [];
+            if (isMaximizing) {
+                let best = -Infinity;
                 for (let i = 0; i < boardSize; i++) {
                     for (let j = 0; j < boardSize; j++) {
                         if (boardState[i][j] === null) {
                             boardState[i][j] = aiPlayer;
-                            let moveVal = minimax(0, false, -Infinity, Infinity);
+                            best = Math.max(best, minimax(depth + 1, !isMaximizing, alpha, beta));
                             boardState[i][j] = null;
-                            if (moveVal > bestVal) {
-                                bestVal = moveVal;
-                                bestMoves = [{ row: i, col: j }];
-                            } else if (moveVal === bestVal) {
-                                bestMoves.push({ row: i, col: j });
-                            }
+                            alpha = Math.max(alpha, best);
+                            if (beta <= alpha) break;
                         }
                     }
+                    if (beta <= alpha) break;
                 }
-                if (bestMoves.length > 0) {
-                    return bestMoves[Math.floor(Math.random() * bestMoves.length)];
-                }
-                return null;
-            }
-            
-            function minimax(depth, isMaximizing, alpha, beta) {
-                const score = evaluate();
-                if (score > 1000 || score < -1000 || isBoardFull() || depth > getSearchDepth()) {
-                    if (score > 1000) return score - depth;
-                    if (score < -1000) return score + depth;
-                    return 0;
-                }
-                if (isMaximizing) {
-                    let best = -Infinity;
-                    for (let i = 0; i < boardSize; i++) {
-                        for (let j = 0; j < boardSize; j++) {
-                            if (boardState[i][j] === null) {
-                                boardState[i][j] = aiPlayer;
-                                best = Math.max(best, minimax(depth + 1, !isMaximizing, alpha, beta));
-                                boardState[i][j] = null;
-                                alpha = Math.max(alpha, best);
-                                if (beta <= alpha) break;
-                            }
-                        }
-                        if (beta <= alpha) break;
-                    }
-                    return best;
-                } else {
-                    let best = Infinity;
-                    for (let i = 0; i < boardSize; i++) {
-                        for (let j = 0; j < boardSize; j++) {
-                            if (boardState[i][j] === null) {
-                                boardState[i][j] = humanPlayer;
-                                best = Math.min(best, minimax(depth + 1, !isMaximizing, alpha, beta));
-                                boardState[i][j] = null;
-                                beta = Math.min(beta, best);
-                                if (beta <= alpha) break;
-                            }
-                        }
-                        if (beta <= alpha) break;
-                    }
-                    return best;
-                }
-            }
-
-            function getSearchDepth() {
-                if (boardSize === 3) return 9;
-                if (boardSize === 4) return 4;
-                return 3;
-            }
-
-            function evaluate() {
-                const winLength = getWinLength();
-                let totalScore = 0;
-                const evaluateLine = (line) => {
-                    let aiPieces = 0;
-                    let humanPieces = 0;
-                    let empty = 0;
-                    for(const cell of line) {
-                        if (cell === aiPlayer) aiPieces++;
-                        else if (cell === humanPlayer) humanPieces++;
-                        else empty++;
-                    }
-                    if (aiPieces > 0 && humanPieces > 0) return 0;
-                    if (aiPieces === winLength) return 10000;
-                    if (humanPieces === winLength) return -50000;
-                    let score = 0;
-                    if (aiPieces === winLength - 1 && empty === 1) score += 500;
-                    if (humanPieces === winLength - 1 && empty === 1) score -= 1000;
-                    if (aiPieces === winLength - 2 && empty === 2) score += 50;
-                    if (humanPieces === winLength - 2 && empty === 2) score -= 100;
-                    return score;
-                }
+                return best;
+            } else {
+                let best = Infinity;
                 for (let i = 0; i < boardSize; i++) {
-                    const row = boardState[i];
-                    const col = boardState.map(r => r[i]);
-                    for(let j = 0; j <= boardSize - winLength; j++){
-                        totalScore += evaluateLine(row.slice(j, j + winLength));
-                        totalScore += evaluateLine(col.slice(j, j + winLength));
+                    for (let j = 0; j < boardSize; j++) {
+                        if (boardState[i][j] === null) {
+                            boardState[i][j] = humanPlayer;
+                            best = Math.min(best, minimax(depth + 1, !isMaximizing, alpha, beta));
+                            boardState[i][j] = null;
+                            beta = Math.min(beta, best);
+                            if (beta <= alpha) break;
+                        }
                     }
+                    if (beta <= alpha) break;
                 }
-                if (checkWin(aiPlayer)) return 10000;
-                if (checkWin(humanPlayer)) return -50000;
-                return totalScore;
+                return best;
             }
-        });
+        }
+
+        function getSearchDepth() {
+            if (boardSize === 3) return 9;
+            if (boardSize === 4) return 4;
+            return 3;
+        }
+
+        function evaluate() {
+            const winLength = getWinLength();
+            let totalScore = 0;
+            const evaluateLine = (line) => {
+                let aiPieces = 0;
+                let humanPieces = 0;
+                let empty = 0;
+                for (const cell of line) {
+                    if (cell === aiPlayer) aiPieces++;
+                    else if (cell === humanPlayer) humanPieces++;
+                    else empty++;
+                }
+                if (aiPieces > 0 && humanPieces > 0) return 0;
+                if (aiPieces === winLength) return 10000;
+                if (humanPieces === winLength) return -50000;
+                let score = 0;
+                if (aiPieces === winLength - 1 && empty === 1) score += 500;
+                if (humanPieces === winLength - 1 && empty === 1) score -= 1000;
+                if (aiPieces === winLength - 2 && empty === 2) score += 50;
+                if (humanPieces === winLength - 2 && empty === 2) score -= 100;
+                return score;
+            }
+            for (let i = 0; i < boardSize; i++) {
+                const row = boardState[i];
+                const col = boardState.map(r => r[i]);
+                for (let j = 0; j <= boardSize - winLength; j++) {
+                    totalScore += evaluateLine(row.slice(j, j + winLength));
+                    totalScore += evaluateLine(col.slice(j, j + winLength));
+                }
+            }
+            if (checkWin(aiPlayer)) return 10000;
+            if (checkWin(humanPlayer)) return -50000;
+            return totalScore;
+        }
+
+    });
     </script>
 
 </body>
